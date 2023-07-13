@@ -72,9 +72,46 @@ class Employee:
         last_name=None,
         email=None,
         department_id=None,
+        password=None,
     ):
         employee_id = employee_id
         first_name = first_name
         last_name = last_name
         email = email
         department_id = department_id
+        password = password
+
+    def authenticate(self):
+        pass
+
+
+class Department:
+    def __init__(
+        self,
+        department_id=None,
+        name=None,
+    ):
+        department_id = department_id
+        name = name
+
+
+class Permission:
+    def __init__(
+        self,
+        permission_id=None,
+        name=None,
+    ):
+        permission_id = permission_id
+        name = name
+
+
+class DepartmentPermission:
+    def __init__(
+        self,
+        department_permission_id=None,
+        department_id=None,
+        permission_id=None,
+    ):
+        department_permission_id = department_permission_id
+        department_id = department_id
+        permission_id = permission_id
