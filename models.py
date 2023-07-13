@@ -64,3 +64,21 @@ class Event:
         location = location
         attendees = attendees
         notes = notes
+
+
+class Employee:
+    def __init__(
+            self,
+            employee_id=None,
+            first_name=None,
+            last_name=None,
+            email=None,
+            department_id=None
+    ):
+        employee_id = employee_id
+        first_name = first_name
+        last_name = last_name
+        email = email
+        department_id = department_id
+
+
