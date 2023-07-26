@@ -72,14 +72,14 @@ class Employee:
         last_name=None,
         email=None,
         department_id=None,
-        password=None,
+        encoded_hash=None,
     ):
         employee_id = employee_id
         first_name = first_name
         last_name = last_name
         email = email
         department_id = department_id
-        password = password
+        encoded_hash = encoded_hash
 
     def authenticate(self):
         pass
