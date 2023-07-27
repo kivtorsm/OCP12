@@ -1,6 +1,6 @@
 import click
 
-
+from src.apikey import prompt_api_details
 @click.group()
 def cli():
     """
@@ -11,8 +11,12 @@ def cli():
 @cli.command("login")
 @click.option("--relogin", "-r", is_flag=True)
 def login(relogin):
-    click.echo(relogin)
+    (client_id, client_secret, app_name) = prompt_api_details()
 
+    click.echo(f"""🔑 Your Super Secret Credentials 🔑
+        Client ID: {client_id}
+        Client Secret: {client_secret}
+        App Name: {app_name}""")
 
 @cli.command("slice")
 @click.option("--daily", "frequency", flag_value="daily", default=True)
