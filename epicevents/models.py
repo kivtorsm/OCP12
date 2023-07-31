@@ -45,6 +45,10 @@ class Contract(Base):
     # Audit columns
     created = Column(db.DATETIME)
 
+    def __repr__(self):
+        return f"Contract {self.id}, client {self.client_id}, total_amount {self.total_amount}, " \
+               f"due_amount {self.due_amount}"
+
 
 class Event:
     __tablename__ = "events"
@@ -60,6 +64,15 @@ class Event:
     attendees_number = Column(Integer)
     notes = Column(String(2048))
 
+    def __repr__(self):
+        return f"Event {self.id}, " \
+               f"client {self.client_id}, " \
+               f"contract {self.contract_id}, " \
+               f"start date {self.start_date}, " \
+               f"end date {self.end_date}, " \
+               f"location {self.location}, " \
+               f"attendees {self.attendees_number}"
+
 
 class Employee:
     __tablename__ = "employees"
@@ -72,6 +85,10 @@ class Employee:
     department_id = Column(Integer)
     encoded_hash = Column(String(64))
 
+    def __repr__(self):
+        return f"Employee {self.id}, first name {self.first_name}, last name {self.last_name}, " \
+               f"email {self.email}, department id {self.department_id}"
+
 
 class Department:
     __tablename__ = "departments"
@@ -79,6 +96,9 @@ class Department:
     # Data columns
     id = Column(Integer, primary_key=True)
     name = Column(String(100))
+
+    def __repr__(self):
+        return f"Department {self.id}, name {self.name}"
 
 
 class Permission:
@@ -88,6 +108,9 @@ class Permission:
     id = Column(Integer, primary_key=True)
     name = Column(String(100))
 
+    def __repr__(self):
+        return f"Permission {self.id}, name {self.name}"
+
 
 class DepartmentPermission:
     __tablename__ = "department_permissions"
@@ -96,3 +119,7 @@ class DepartmentPermission:
     id = Column(Integer, primary_key=True)
     department_id = Column(Integer)
     permission_id = Column(Integer)
+
+    def __repr__(self):
+        return f"Department permission {self.id}, department id {self.department_id}, " \
+               f"permission id {self.permission_id}"
