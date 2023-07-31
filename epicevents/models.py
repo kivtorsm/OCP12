@@ -1,8 +1,8 @@
 from database import db
 
-from sqlalchemy import Column, Integer, String, Float
-from sqlalchemy.orm import deferred, declarative_base
-from sqlalchemy.dialects.mysql import LONGBLOB
+from sqlalchemy import Column, Integer, String, Float, create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 
 Base = declarative_base()
@@ -123,3 +123,13 @@ class DepartmentPermission:
     def __repr__(self):
         return f"Department permission {self.id}, department id {self.department_id}, " \
                f"permission id {self.permission_id}"
+
+
+def start():
+    engine = create_engine("mysql://app:password@localhost/epic_events")
+
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    Base.metadata.create_all(engine)
+    return engine, session
