@@ -1,117 +1,98 @@
-class Client:
-    def __init__(
-        self,
-        client_id=None,
-        first_name=None,
-        last_name=None,
-        email=None,
-        telephone=None,
-        company_name=None,
-        created=None,
-        modified=None,
-        commercial_id=None,
-    ):
-        client_id = client_id
-        first_name = first_name
-        last_name = last_name
-        email = email
-        telephone = telephone
-        company_name = company_name
-        created = created
-        modified = modified
-        commercial_id = commercial_id
+from database import db
+
+from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy.orm import deferred, declarative_base
+from sqlalchemy.dialects.mysql import LONGBLOB
 
 
-class Contract:
-    def __init__(
-        self,
-        contract_id=None,
-        client_id=None,
-        total_amount=None,
-        due_amount=None,
-        created=None,
-        status=None,
-    ):
-        contract_id = contract_id
-        client_id = client_id
-        total_amount = total_amount
-        due_amount = due_amount
-        created = created
-        status = status
+Base = declarative_base()
+
+
+class Client(Base):
+    __tablename__ = "clients"
+
+    # Data columns
+    id = Column(Integer, primary_key=True)
+    first_name = Column(String(30))
+    last_name = Column(String(30))
+    email = Column(String(100))
+    telephone = Column(String(15))
+    company_name = Column(String(50))
+    commercial_id = Column(Integer)
+
+    # Audit columns
+    created = Column(db.DATETIME)
+    modified = Column(db.DATETIME)
+
+    def __repr__(self):
+        return "<Client(first_name='%s', last_name='%s', company_name='%s')>" % (
+            self.first_name,
+            self.last_name,
+            self.company_name,
+        )
+
+
+class Contract(Base):
+    __tablename__ = "contracts"
+
+    # Data columns
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer)
+    total_amount = Column(Float)
+    due_amount = Column(Float)
+    status = Column(String(20))
+
+    # Audit columns
+    created = Column(db.DATETIME)
 
 
 class Event:
-    def __init__(
-        self,
-        event_id=None,
-        contract_id=None,
-        client_id=None,
-        start_date=None,
-        end_date=None,
-        support_contact_id=None,
-        location=None,
-        attendees=None,
-        notes=None,
-    ):
-        event_id = event_id
-        contract_id = contract_id
-        client_id = client_id
-        start_date = start_date
-        end_date = end_date
-        support_contact_id = support_contact_id
-        location = location
-        attendees = attendees
-        notes = notes
+    __tablename__ = "events"
+
+    # Data columns
+    id = Column(Integer, primary_key=True)
+    contract_id = Column(Integer)
+    client_id = Column(Integer)
+    start_date = Column(db.DATETIME)
+    end_date = Column(db.DATETIME)
+    support_contact_id = Column(Integer)
+    location = Column(String(100))
+    attendees_number = Column(Integer)
+    notes = Column(String(2048))
 
 
 class Employee:
-    def __init__(
-        self,
-        employee_id=None,
-        first_name=None,
-        last_name=None,
-        email=None,
-        department_id=None,
-        encoded_hash=None,
-    ):
-        employee_id = employee_id
-        first_name = first_name
-        last_name = last_name
-        email = email
-        department_id = department_id
-        encoded_hash = encoded_hash
+    __tablename__ = "employees"
 
-    def authenticate(self):
-        pass
+    # Data columns
+    id = Column(Integer, primary_key=True)
+    first_name = Column(String(20))
+    last_name = Column(String(20))
+    email = Column(String(100))
+    department_id = Column(Integer)
+    encoded_hash = Column(String(64))
 
 
 class Department:
-    def __init__(
-        self,
-        department_id=None,
-        name=None,
-    ):
-        department_id = department_id
-        name = name
+    __tablename__ = "departments"
+
+    # Data columns
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100))
 
 
 class Permission:
-    def __init__(
-        self,
-        permission_id=None,
-        name=None,
-    ):
-        permission_id = permission_id
-        name = name
+    __tablename__ = "permissions"
+
+    # Data columns
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100))
 
 
 class DepartmentPermission:
-    def __init__(
-        self,
-        department_permission_id=None,
-        department_id=None,
-        permission_id=None,
-    ):
-        department_permission_id = department_permission_id
-        department_id = department_id
-        permission_id = permission_id
+    __tablename__ = "department_permissions"
+
+    # Data columns
+    id = Column(Integer, primary_key=True)
+    department_id = Column(Integer)
+    permission_id = Column(Integer)
