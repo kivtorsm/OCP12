@@ -1,8 +1,10 @@
 from database import db
 
+from typing import List
+
 from sqlalchemy import Column, Integer, String, Float, create_engine, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import sessionmaker, relationship, Mapped, mapped_column
 
 
 Base = declarative_base()
@@ -12,15 +14,15 @@ class Event:
     __tablename__ = "event"
 
     # Data columns
-    id = Column(Integer, primary_key=True)
-    contract_id = Column(Integer, ForeignKey('contract.id'))
-    contract = relationship('Contract')
-    client_id = Column(Integer, ForeignKey('client.id'))
-    client = relationship('Client')
+    id: Mapped[int] = mapped_column(primary_key=True)
+    contract_id: Mapped[int] = mapped_column(ForeignKey('contract.id'))
+    contract: Mapped["Contract"] = relationship(back_populates='contracts')
+    client_id: Mapped[int] = mapped_column(ForeignKey('client.id'))
+    client: Mapped["Client"] = relationship(back_populates='clients')
     start_date = Column(db.DATETIME)
     end_date = Column(db.DATETIME)
-    support_contact_id = Column(Integer, ForeignKey('employee.id'))
-    support_contact = relationship('Employee')
+    support_contact_id: Mapped[int] = mapped_column(ForeignKey('employee.id'))
+    support_contact: Mapped["Employee"] = relationship(back_populates='support_contacts')
     location = Column(String(100))
     attendees_number = Column(Integer)
     notes = Column(String(2048))
@@ -39,13 +41,15 @@ class Contract(Base):
     __tablename__ = "contract"
 
     # Data columns
-    id = Column(Integer, primary_key=True)
-    client_id = Column(Integer, ForeignKey('client.id'))
-    client = relationship('Client')
+    id: Mapped[int] = mapped_column(primary_key=True)
+    client_id: Mapped[int] = mapped_column(ForeignKey('client.id'))
+    client: Mapped["Client"] = relationship(back_populates='clients')
     total_amount = Column(Float)
     due_amount = Column(Float)
     status = Column(String(20))
-    events = relationship(Event, backref="events")
+    events: Mapped[List["Event"]] = relationship(
+        back_populates="contract",
+    )
 
     # Audit columns
     created = Column(db.DATETIME)
@@ -59,15 +63,20 @@ class Client(Base):
     __tablename__ = "client"
 
     # Data columns
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     first_name = Column(String(30))
     last_name = Column(String(30))
     email = Column(String(100))
     telephone = Column(String(15))
     company_name = Column(String(50))
-    commercial_id = Column(Integer, ForeignKey('employee.id'))
-    contracts = relationship(Contract, backref='contracts')
-    events = relationship(Event, backref='clients')
+    commercial_id: Mapped[int] = mapped_column(ForeignKey('employee.id'))
+    commercial: Mapped["Employee"] = relationship(back_populates='commercials')
+    contracts: Mapped[List["Contract"]] = relationship(
+        back_populates="client",
+    )
+    events: Mapped[List["Event"]] = relationship(
+        back_populates="client",
+    )
 
     # Audit columns
     created = Column(db.DATETIME)
@@ -85,15 +94,19 @@ class Employee:
     __tablename__ = "employee"
 
     # Data columns
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     first_name = Column(String(20))
     last_name = Column(String(20))
     email = Column(String(100))
-    department_id = Column(Integer, ForeignKey='department.id')
-    department = relationship('Department')
+    department_id: Mapped[int] = mapped_column(ForeignKey='department.id')
+    department: Mapped["Department"] = relationship(back_populates='departments')
     encoded_hash = Column(String(64))
-    commercial_for = relationship(Client, backref='clients')
-    support_contact_for = relationship(Event, backref='events')
+    clients: Mapped[List["Client"]] = relationship(
+        back_populates="employee",
+    )
+    events: Mapped[List["Event"]] = relationship(
+        back_populates="employee",
+    )
 
     def __repr__(self):
         return f"Employee {self.id}, first name {self.first_name}, last name {self.last_name}, " \
@@ -104,12 +117,11 @@ class DepartmentPermission:
     __tablename__ = "department_permission"
 
     # Data columns
-    id = Column(Integer, primary_key=True)
-    department_id = Column(Integer, ForeignKey='department.id')
-    department = relationship('Department')
-    permission_id = Column(Integer, ForeignKey='permission.id')
-    permission = relationship('Permission')
-
+    id: Mapped[int] = mapped_column(primary_key=True)
+    department_id: Mapped[int] = mapped_column(ForeignKey='department.id')
+    department: Mapped["Department"] = relationship(back_populates='departments')
+    permission_id: Mapped[int] = mapped_column(ForeignKey='permission.id')
+    permission: Mapped["Permission"] = relationship(back_populates='permissions')
     def __repr__(self):
         return f"Department permission {self.id}, department {self.deparment.name}, " \
                f"permission {self.permission.name}"
@@ -119,10 +131,14 @@ class Department:
     __tablename__ = "department"
 
     # Data columns
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     name = Column(String(100))
-    employees = relationship(Employee, backref='employees')
-    department_permission = relationship(DepartmentPermission, backref='departmentpermissions')
+    employees: Mapped[List["Employee"]] = relationship(
+        back_populates="department",
+    )
+    department_permissions: Mapped[List["DepartmentPermission"]] = relationship(
+        back_populates="department",
+    )
 
     def __repr__(self):
         return f"Department {self.id}, name {self.name}"
@@ -132,9 +148,11 @@ class Permission:
     __tablename__ = "permission"
 
     # Data columns
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     name = Column(String(100))
-    department_permission = relationship(DepartmentPermission, backref='departmentpermissions')
+    department_permissions: Mapped[List["DepartmentPermission"]] = relationship(
+        back_populates="permission",
+    )
 
     def __repr__(self):
         return f"Permission {self.id}, name {self.name}"
