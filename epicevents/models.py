@@ -2,24 +2,23 @@ import datetime
 
 from typing import List
 
-from sqlalchemy import Integer, String, Float, create_engine, ForeignKey, DateTime
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship, Mapped, mapped_column
+from sqlalchemy import Integer, String, Float, ForeignKey, DateTime
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.sql import func
 
+from conf import Base, ENGINE
 
-Base = declarative_base()
 
-
-class Event:
+class Event(Base):
     __tablename__ = "event"
+
 
     # Data columns
     id: Mapped[int] = mapped_column(primary_key=True)
     contract_id: Mapped[int] = mapped_column(ForeignKey('contract.id'))
-    contract: Mapped["Contract"] = relationship(back_populates='contracts')
+    contract: Mapped["Contract"] = relationship(back_populates='events')
     client_id: Mapped[int] = mapped_column(ForeignKey('client.id'))
-    client: Mapped["Client"] = relationship(back_populates='clients')
+    client: Mapped["Client"] = relationship(back_populates='events')
     start_date: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True),
     )
@@ -27,7 +26,7 @@ class Event:
         DateTime(timezone=True),
     )
     support_contact_id: Mapped[int] = mapped_column(ForeignKey('employee.id'))
-    support_contact: Mapped["Employee"] = relationship(back_populates='support_contacts')
+    support_contact: Mapped["Employee"] = relationship(back_populates='events')
     location: Mapped[str] = mapped_column(String(100))
     attendees_number: Mapped[str] = mapped_column(Integer)
     notes: Mapped[str] = mapped_column(String(2048))
@@ -48,7 +47,7 @@ class Contract(Base):
     # Data columns
     id: Mapped[int] = mapped_column(primary_key=True)
     client_id: Mapped[int] = mapped_column(ForeignKey('client.id'))
-    client: Mapped["Client"] = relationship(back_populates='clients')
+    client: Mapped["Client"] = relationship(back_populates='contracts')
     total_amount: Mapped[str] = mapped_column(Float)
     due_amount: Mapped[str] = mapped_column(Float)
     status: Mapped[str] = mapped_column(String(20))
@@ -77,7 +76,7 @@ class Client(Base):
     telephone: Mapped[str] = mapped_column(String(15))
     company_name: Mapped[str] = mapped_column(String(50))
     commercial_id: Mapped[int] = mapped_column(ForeignKey('employee.id'))
-    commercial: Mapped["Employee"] = relationship(back_populates='commercials')
+    commercial: Mapped["Employee"] = relationship(back_populates='clients')
     contracts: Mapped[List["Contract"]] = relationship(
         back_populates="client",
     )
@@ -94,14 +93,15 @@ class Client(Base):
     )
 
     def __repr__(self):
-        return "<Client(first_name='%s', last_name='%s', company_name='%s')>" % (
+        return "<Client(id = '%s', first_name='%s', last_name='%s', company_name='%s')>" % (
+            self.id,
             self.first_name,
             self.last_name,
             self.company_name,
         )
 
 
-class Employee:
+class Employee(Base):
     __tablename__ = "employee"
 
     # Data columns
@@ -109,14 +109,14 @@ class Employee:
     first_name: Mapped[str] = mapped_column(String(20))
     last_name: Mapped[str] = mapped_column(String(20))
     email: Mapped[str] = mapped_column(String(100))
-    department_id: Mapped[int] = mapped_column(ForeignKey='department.id')
-    department: Mapped["Department"] = relationship(back_populates='departments')
+    department_id: Mapped[int] = mapped_column(ForeignKey('department.id'))
+    department: Mapped["Department"] = relationship(back_populates='employees')
     encoded_hash: Mapped[str] = mapped_column(String(64))
     clients: Mapped[List["Client"]] = relationship(
-        back_populates="employee",
+        back_populates="commercial",
     )
     events: Mapped[List["Event"]] = relationship(
-        back_populates="employee",
+        back_populates="support_contact",
     )
 
     def __repr__(self):
@@ -124,21 +124,21 @@ class Employee:
                f"email {self.email}, department id {self.department_id}"
 
 
-class DepartmentPermission:
+class DepartmentPermission(Base):
     __tablename__ = "department_permission"
 
     # Data columns
     id: Mapped[int] = mapped_column(primary_key=True)
-    department_id: Mapped[int] = mapped_column(ForeignKey='department.id')
-    department: Mapped["Department"] = relationship(back_populates='departments')
-    permission_id: Mapped[int] = mapped_column(ForeignKey='permission.id')
-    permission: Mapped["Permission"] = relationship(back_populates='permissions')
+    department_id: Mapped[int] = mapped_column(ForeignKey('department.id'))
+    department: Mapped["Department"] = relationship(back_populates='department_permissions')
+    permission_id: Mapped[int] = mapped_column(ForeignKey('permission.id'))
+    permission: Mapped["Permission"] = relationship(back_populates='department_permissions')
     def __repr__(self):
         return f"Department permission {self.id}, department {self.deparment.name}, " \
                f"permission {self.permission.name}"
 
 
-class Department:
+class Department(Base):
     __tablename__ = "department"
 
     # Data columns
@@ -155,7 +155,7 @@ class Department:
         return f"Department {self.id}, name {self.name}"
 
 
-class Permission:
+class Permission(Base):
     __tablename__ = "permission"
 
     # Data columns
@@ -169,11 +169,5 @@ class Permission:
         return f"Permission {self.id}, name {self.name}"
 
 
-def start():
-    engine = create_engine("mysql://app:password@localhost/epic_events")
-
-    Session = sessionmaker(bind=engine)
-    session = Session()
-
-    Base.metadata.create_all(engine)
-    return engine, session
+def start_db():
+    Base.metadata.create_all(ENGINE)

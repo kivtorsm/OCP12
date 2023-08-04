@@ -1,14 +1,20 @@
 import click
-from epicevents.api import API
 
-from epicevents.apikey import (
+from sqlalchemy.orm import sessionmaker
+
+from api import API
+
+from apikey import (
     read_credentials,
     prompt_api_details,
     request_access_token,
     write_netrc,
 )
-from epicevents.config import TWITTER_API
-from epicevents.display import Display
+from config import TWITTER_API
+from display import Display
+
+from models import start_db, Client
+from dao import ClientDAO
 
 
 @click.group()
@@ -58,3 +64,62 @@ def slice(frequency):
         return
     tweets = API(credentials[0], credentials[1], TWITTER_API).query(frequency)
     display.tweetsAsTable(tweets, frequency)
+
+
+def create_client():
+    client = Client(first_name="Victor",
+                    last_name="Serradilla",
+                    email="nom.prenom@gmail.com",
+                    telephone="+33666666666",
+                    company_name="company",
+                    commercial_id=1,
+                    )
+    ClientDAO.client_add(client)
+
+
+def get_all_clients():
+    [print(client) for client in ClientDAO.client_get_all()]
+
+
+def get_client_by_id(client_id: int):
+    return ClientDAO.client_get_by_id(client_id)
+
+
+def update_client(client_id: int, client2: Client):
+    # client_dao = ClientDAO()
+    ClientDAO.client_update(ClientDAO, client_id, last_name=client2.last_name)
+
+
+def delete_client(client_id: int):
+    # client_dao = ClientDAO()
+    ClientDAO.client_delete(ClientDAO, client_id)
+
+
+if __name__ == "__main__":
+    # start_db()
+    client = Client(first_name="Victor",
+                    last_name="Serradilla",
+                    email="nom.prenom@gmail.com",
+                    telephone="+33666666666",
+                    company_name="company",
+                    commercial_id=1,
+                    )
+    create_client()
+    print(get_client_by_id(1))
+
+    client2 = Client(
+        first_name="Victor",
+        last_name="Mazuelas",
+        email="nom.prenom@gmail.com",
+        telephone="+33666666666",
+        company_name="company",
+        commercial_id=1,
+    )
+    update_client(1, client2)
+    get_all_clients()
+    delete_client(1)
+    # delete_client(2)
+    get_all_clients()
+
+    # cli()
+
