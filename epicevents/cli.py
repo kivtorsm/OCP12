@@ -1,7 +1,5 @@
 import click
 
-from sqlalchemy.orm import sessionmaker
-
 from api import API
 
 from apikey import (
@@ -15,6 +13,7 @@ from display import Display
 
 from models import start_db, Client
 from dao import ClientDAO
+from views import ClientView
 
 
 @click.group()
@@ -95,31 +94,39 @@ def delete_client(client_id: int):
     ClientDAO.client_delete(ClientDAO, client_id)
 
 
+@cli.command("client_crud")
+def client_crud_menu():
+    view = ClientView()
+    view.prompt_for_client_crud_menu()
+
+
+
+
+
 if __name__ == "__main__":
     # start_db()
-    client = Client(first_name="Victor",
-                    last_name="Serradilla",
-                    email="nom.prenom@gmail.com",
-                    telephone="+33666666666",
-                    company_name="company",
-                    commercial_id=1,
-                    )
-    create_client()
-    print(get_client_by_id(1))
+    # client = Client(first_name="Victor",
+    #                 last_name="Serradilla",
+    #                 email="nom.prenom@gmail.com",
+    #                 telephone="+33666666666",
+    #                 company_name="company",
+    #                 commercial_id=1,
+    #                 )
+    # create_client()
+    # print(get_client_by_id(1))
+    #
+    # client2 = Client(
+    #     first_name="Victor",
+    #     last_name="Mazuelas",
+    #     email="nom.prenom@gmail.com",
+    #     telephone="+33666666666",
+    #     company_name="company",
+    #     commercial_id=1,
+    # )
+    # update_client(1, client2)
+    # get_all_clients()
+    # delete_client(1)
+    # # delete_client(2)
+    # get_all_clients()
 
-    client2 = Client(
-        first_name="Victor",
-        last_name="Mazuelas",
-        email="nom.prenom@gmail.com",
-        telephone="+33666666666",
-        company_name="company",
-        commercial_id=1,
-    )
-    update_client(1, client2)
-    get_all_clients()
-    delete_client(1)
-    # delete_client(2)
-    get_all_clients()
-
-    # cli()
-
+    cli()
