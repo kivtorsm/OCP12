@@ -1,3 +1,5 @@
+import getpass
+
 from InquirerPy import prompt, inquirer
 from InquirerPy.base.control import Choice
 from InquirerPy.separator import Separator
@@ -20,4 +22,25 @@ class ClientView:
             choices=choices,
             default=None,
         ).execute()
+
+        return action
+
+    def prompt_for_client_creation(self):
+        first_name = inquirer.text(message="Saisir prénom du client:").execute()
+        last_name = inquirer.text(message="Saisir nom du client:").execute()
+        email = inquirer.text(message="Saisir email du client:").execute()
+        telephone = inquirer.text(message="Saisir numéro de téléphone du client:").execute()
+        company_name = inquirer.text(message="Saisir nom de l'entreprise du client:").execute()
+        commercial_id = inquirer.text(message="Saisir id du commercial responsable:").execute()
+
+        return {
+            "first_name": first_name,
+            "last_name": last_name,
+            "email": email,
+            "telephone": telephone,
+            "company_name": company_name,
+            "commercial_id": commercial_id,
+        }
+
+
 

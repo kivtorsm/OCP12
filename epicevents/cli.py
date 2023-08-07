@@ -11,7 +11,7 @@ from apikey import (
 from config import TWITTER_API
 from display import Display
 
-from models import start_db, Client
+from models import Client
 from dao import ClientDAO
 from views import ClientView
 
@@ -41,38 +41,34 @@ def login(relogin):
         )
 
 
-@cli.command("slice")
-@click.option(
-    "--daily",
-    "frequency",
-    flag_value="daily",
-    default=True,
-    help="Fetch the Top ML tweets for the past 24 hours.",
-)
-@click.option(
-    "--weekly",
-    "frequency",
-    flag_value="weekly",
-    help="Fetch the Top ML tweets for the past 7 days.",
-)
-def slice(frequency):
-    display = Display()
-    credentials = read_credentials(TWITTER_API)
-    if credentials is None:
-        display.error("Please login before running this command! ❌")
-        return
-    tweets = API(credentials[0], credentials[1], TWITTER_API).query(frequency)
-    display.tweetsAsTable(tweets, frequency)
+@cli.command("client_crud")
+def client_crud_menu():
+    view = ClientView()
+    choice = view.prompt_for_client_crud_menu()
+    commands = {
+        'create_client': 'create_client()',
+        'show_all_clients': 'get_all_clients()',
+        'show_client_detail': 'get_client_by_id()',
+        'update_client': 'update_client()',
+        'delete_client': 'delete_client()',
+    }
+
+    choice_command = commands[choice]
+    exec(choice_command)
 
 
 def create_client():
-    client = Client(first_name="Victor",
-                    last_name="Serradilla",
-                    email="nom.prenom@gmail.com",
-                    telephone="+33666666666",
-                    company_name="company",
-                    commercial_id=1,
-                    )
+    view = ClientView()
+    client_data = view.prompt_for_client_creation()
+    client = Client(
+        first_name=client_data['first_name'],
+        last_name=client_data['last_name'],
+        email=client_data['email'],
+        telephone=client_data['telephone'],
+        company_name=client_data['company_name'],
+        commercial_id=client_data['commercial_id'],
+    )
+    # print(client)
     ClientDAO.client_add(client)
 
 
@@ -87,17 +83,13 @@ def get_client_by_id(client_id: int):
 def update_client(client_id: int, client2: Client):
     # client_dao = ClientDAO()
     ClientDAO.client_update(ClientDAO, client_id, last_name=client2.last_name)
+    # TODO : généraliser à n'importe quel champ
 
 
 def delete_client(client_id: int):
-    # client_dao = ClientDAO()
     ClientDAO.client_delete(ClientDAO, client_id)
 
 
-@cli.command("client_crud")
-def client_crud_menu():
-    view = ClientView()
-    view.prompt_for_client_crud_menu()
 
 
 
