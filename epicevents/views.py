@@ -4,19 +4,51 @@ from InquirerPy import prompt, inquirer
 from InquirerPy.base.control import Choice
 from InquirerPy.separator import Separator
 
-from models import Client
+from models import Client, Contract, Event, Employee
+
+NAMES = {
+            'client': "client",
+            'contract': "contrat",
+            'event': "évènement",
+            'employee': "employé",
+        }
+
+ACTIONS = {
+    'show': "consulter",
+    'update': "mettre à jour",
+    'delete': "supprimer",
+}
 
 
 class ClientView:
-    def prompt_for_client_crud_menu(self):
+    def prompt_for_main_menu(self):
         choices = [
-            Choice('create_client', name="Créer client"),
-            Choice('show_all_clients', name="Consulter la liste des clients"),
-            Choice('show_client_detail', name="Consulter les détails d'un client"),
-            Choice('update_client', name="Modifier client"),
-            Choice('delete_client', name="Supprimer un client"),
+            Choice('client', name="Clients"),
+            Choice('contract', name="Contrats"),
+            Choice('event', name="Evènements"),
+            Choice('employee', name="Collaborateurs"),
             Separator(),
-            Choice('exit', name="Sortir"),
+            Choice('exit', name="Menu principal"),
+        ]
+        action = inquirer.select(
+            message="Choisissez un menu:",
+            choices=choices,
+            default=None,
+        ).execute()
+        print("")
+
+        return action
+
+    def prompt_for_crud_menu(self, obj_type: str):
+
+        choices = [
+            Choice('create', name=f"Créer un {NAMES[obj_type]}"),
+            Choice('show_all', name=f"Consulter la liste des {NAMES[obj_type]}s"),
+            Choice('show_details', name=f"Consulter les détails d'un {NAMES[obj_type]}"),
+            Choice('update', name=f"Modifier {NAMES[obj_type]}"),
+            Choice('delete', name=f"Supprimer un {NAMES[obj_type]}"),
+            Separator(),
+            Choice('exit', name="Fermer application"),
         ]
 
         action = inquirer.select(
@@ -45,25 +77,21 @@ class ClientView:
             "commercial_id": commercial_id,
         }
 
-    def show_client_list(self, clients: list):
-        [print(client) for client in clients]
+    def show_obj_list(self, obj_list: list):
+        [print(obj) for obj in obj_list]
         print("")
 
-    def show_client_details(self, client: Client):
-        print(client)
+    def show_details(self, obj: object):
+        print(obj)
         print("")
 
-    def prompt_for_client_id(self, action: str):
-        actions = {
-            'show': "consulter",
-            'update': "mettre à jour",
-            'delete': "supprimer",
-        }
-        client_id = inquirer.text(message=f"Saisir id du client à {actions[action]}:").execute()
-        print("")
-        return client_id
+    def prompt_for_object_id(self, action: str, obj_type: str):
 
-    def prompt_for_client_field_update(self, client: Client):
+        obj_id = inquirer.text(message=f"Saisir id du {NAMES[obj_type]} à {ACTIONS[action]}:").execute()
+        print("")
+        return obj_id
+
+    def prompt_for_object_field_update(self, client: Client):
         fields_excluded = [
             "_sa_instance_state",
             "created",
@@ -81,3 +109,20 @@ class ClientView:
         new_value = inquirer.text(message=f"Saisir nouvelle valeur pour {field_to_modify}:").execute()
         print("")
         return field_to_modify, new_value
+
+    @staticmethod
+    def prompt_for_confirmation(change: str, obj_type: str, obj: object):
+        match change:
+            case 'create':
+                print(f"Le {NAMES[obj_type]} a été correctement créé")
+                print(obj)
+                print("")
+            case 'update':
+                print(f"Le {obj_type} a été correctement modifié")
+                print(obj)
+                print("")
+            case 'delete':
+                print(f"Le {obj_type} a été correctement supprimé")
+                print("Enregistrement supprimé :")
+                print(obj)
+                print("")
