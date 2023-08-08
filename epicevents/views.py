@@ -62,3 +62,22 @@ class ClientView:
         client_id = inquirer.text(message=f"Saisir id du client à {actions[action]}:").execute()
         print("")
         return client_id
+
+    def prompt_for_client_field_update(self, client: Client):
+        fields_excluded = [
+            "_sa_instance_state",
+            "created",
+            "id",
+            "modified",
+        ]
+        field_choices = [Choice(attr, name=f"{attr}: {value}") for attr, value in client.__dict__.items() if attr not in fields_excluded]
+        field_to_modify = inquirer.select(
+            message="Sélectionner un champ à modifier:",
+            choices=field_choices,
+            default=None,
+        ).execute()
+        print("")
+
+        new_value = inquirer.text(message=f"Saisir nouvelle valeur pour {field_to_modify}:").execute()
+        print("")
+        return field_to_modify, new_value

@@ -49,7 +49,7 @@ def client_crud_menu():
         commands = {
             'create_client': 'create_client()',
             'show_all_clients': 'show_all_clients()',
-            'show_client_detail': 'get_client_by_id()',
+            'show_client_detail': 'show_client_by_id()',
             'update_client': 'update_client()',
             'delete_client': 'delete_client()',
             'exit': 'exit()'
@@ -82,7 +82,7 @@ def show_all_clients():
 
 
 
-def get_client_by_id():
+def show_client_by_id():
     view = ClientView()
     action = "show"
     client_id = view.prompt_for_client_id(action)
@@ -90,9 +90,15 @@ def get_client_by_id():
     view.show_client_details(client)
 
 
-def update_client(client_id: int, client2: Client):
-    # client_dao = ClientDAO()
-    ClientDAO.client_update(ClientDAO, client_id, last_name=client2.last_name)
+def update_client():
+    view = ClientView()
+    action = "delete"
+    client_id = view.prompt_for_client_id(action)
+    client = ClientDAO.client_get_by_id(client_id)
+    view.show_client_details(client)
+    field, new_value = view.prompt_for_client_field_update(client)
+    command = f"ClientDAO.client_update(ClientDAO, client_id, {field}='{new_value}')"
+    exec(command)
     # TODO : généraliser à n'importe quel champ
 
 
@@ -100,6 +106,7 @@ def delete_client():
     view = ClientView()
     action = "delete"
     client_id = view.prompt_for_client_id(action)
+
     ClientDAO.client_delete(ClientDAO, client_id)
 
 
