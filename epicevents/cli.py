@@ -44,17 +44,19 @@ def login(relogin):
 @cli.command("client_crud")
 def client_crud_menu():
     view = ClientView()
-    choice = view.prompt_for_client_crud_menu()
-    commands = {
-        'create_client': 'create_client()',
-        'show_all_clients': 'get_all_clients()',
-        'show_client_detail': 'get_client_by_id()',
-        'update_client': 'update_client()',
-        'delete_client': 'delete_client()',
-    }
+    while True:
+        choice = view.prompt_for_client_crud_menu()
+        commands = {
+            'create_client': 'create_client()',
+            'show_all_clients': 'show_all_clients()',
+            'show_client_detail': 'get_client_by_id()',
+            'update_client': 'update_client()',
+            'delete_client': 'delete_client()',
+            'exit': 'exit()'
+        }
 
-    choice_command = commands[choice]
-    exec(choice_command)
+        choice_command = commands[choice]
+        exec(choice_command)
 
 
 def create_client():
@@ -70,14 +72,22 @@ def create_client():
     )
     # print(client)
     ClientDAO.client_add(client)
+    # TODO : retour utilisateur confirmation création client
 
 
-def get_all_clients():
-    [print(client) for client in ClientDAO.client_get_all()]
+def show_all_clients():
+    clients = ClientDAO.client_get_all()
+    view = ClientView()
+    view.show_client_list(clients)
 
 
-def get_client_by_id(client_id: int):
-    return ClientDAO.client_get_by_id(client_id)
+
+def get_client_by_id():
+    view = ClientView()
+    action = "show"
+    client_id = view.prompt_for_client_id(action)
+    client = ClientDAO.client_get_by_id(client_id)
+    view.show_client_details(client)
 
 
 def update_client(client_id: int, client2: Client):
@@ -86,13 +96,11 @@ def update_client(client_id: int, client2: Client):
     # TODO : généraliser à n'importe quel champ
 
 
-def delete_client(client_id: int):
+def delete_client():
+    view = ClientView()
+    action = "delete"
+    client_id = view.prompt_for_client_id(action)
     ClientDAO.client_delete(ClientDAO, client_id)
-
-
-
-
-
 
 
 if __name__ == "__main__":

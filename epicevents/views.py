@@ -4,6 +4,8 @@ from InquirerPy import prompt, inquirer
 from InquirerPy.base.control import Choice
 from InquirerPy.separator import Separator
 
+from models import Client
+
 
 class ClientView:
     def prompt_for_client_crud_menu(self):
@@ -18,10 +20,11 @@ class ClientView:
         ]
 
         action = inquirer.select(
-            message="Select an action:",
+            message="Sélectionner une action:",
             choices=choices,
             default=None,
         ).execute()
+        print("")
 
         return action
 
@@ -32,7 +35,7 @@ class ClientView:
         telephone = inquirer.text(message="Saisir numéro de téléphone du client:").execute()
         company_name = inquirer.text(message="Saisir nom de l'entreprise du client:").execute()
         commercial_id = inquirer.text(message="Saisir id du commercial responsable:").execute()
-
+        print("")
         return {
             "first_name": first_name,
             "last_name": last_name,
@@ -42,5 +45,20 @@ class ClientView:
             "commercial_id": commercial_id,
         }
 
+    def show_client_list(self, clients: list):
+        [print(client) for client in clients]
+        print("")
 
+    def show_client_details(self, client: Client):
+        print(client)
+        print("")
 
+    def prompt_for_client_id(self, action: str):
+        actions = {
+            'show': "consulter",
+            'update': "mettre à jour",
+            'delete': "supprimer",
+        }
+        client_id = inquirer.text(message=f"Saisir id du client à {actions[action]}:").execute()
+        print("")
+        return client_id
