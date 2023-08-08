@@ -21,7 +21,8 @@ ACTIONS = {
 
 
 class ClientView:
-    def prompt_for_main_menu(self):
+    @staticmethod
+    def prompt_for_main_menu():
         choices = [
             Choice('client', name="Clients"),
             Choice('contract', name="Contrats"),
@@ -39,7 +40,8 @@ class ClientView:
 
         return action
 
-    def prompt_for_crud_menu(self, obj_type: str):
+    @staticmethod
+    def prompt_for_crud_menu(obj_type: str):
 
         choices = [
             Choice('create', name=f"Créer un {NAMES[obj_type]}"),
@@ -60,7 +62,8 @@ class ClientView:
 
         return action
 
-    def prompt_for_client_creation(self):
+    @staticmethod
+    def prompt_for_client_creation():
         first_name = inquirer.text(message="Saisir prénom du client:").execute()
         last_name = inquirer.text(message="Saisir nom du client:").execute()
         email = inquirer.text(message="Saisir email du client:").execute()
@@ -77,21 +80,25 @@ class ClientView:
             "commercial_id": commercial_id,
         }
 
-    def show_obj_list(self, obj_list: list):
+    @staticmethod
+    def show_obj_list(obj_list: list):
         [print(obj) for obj in obj_list]
         print("")
 
-    def show_details(self, obj: object):
+    @staticmethod
+    def show_details(obj: object):
         print(obj)
         print("")
 
-    def prompt_for_object_id(self, action: str, obj_type: str):
+    @staticmethod
+    def prompt_for_object_id(action: str, obj_type: str):
 
         obj_id = inquirer.text(message=f"Saisir id du {NAMES[obj_type]} à {ACTIONS[action]}:").execute()
         print("")
         return obj_id
 
-    def prompt_for_object_field_update(self, client: Client):
+    @staticmethod
+    def prompt_for_object_field_update(client: Client):
         fields_excluded = [
             "_sa_instance_state",
             "created",
@@ -115,14 +122,11 @@ class ClientView:
         match change:
             case 'create':
                 print(f"Le {NAMES[obj_type]} a été correctement créé")
-                print(obj)
-                print("")
             case 'update':
                 print(f"Le {obj_type} a été correctement modifié")
-                print(obj)
-                print("")
             case 'delete':
                 print(f"Le {obj_type} a été correctement supprimé")
                 print("Enregistrement supprimé :")
-                print(obj)
-                print("")
+
+        print(obj)
+        print("")
