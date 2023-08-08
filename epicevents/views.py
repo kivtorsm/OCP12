@@ -20,7 +20,7 @@ ACTIONS = {
 }
 
 
-class ClientView:
+class CrudView:
     @staticmethod
     def prompt_for_main_menu():
         choices = [
@@ -29,7 +29,7 @@ class ClientView:
             Choice('event', name="Evènements"),
             Choice('employee', name="Collaborateurs"),
             Separator(),
-            Choice('exit', name="Menu principal"),
+            Choice('exit', name="Fermer application"),
         ]
         action = inquirer.select(
             message="Choisissez un menu:",
@@ -50,7 +50,7 @@ class ClientView:
             Choice('update', name=f"Modifier {NAMES[obj_type]}"),
             Choice('delete', name=f"Supprimer un {NAMES[obj_type]}"),
             Separator(),
-            Choice('exit', name="Fermer application"),
+            Choice('exit', name="Menu principal"),
         ]
 
         action = inquirer.select(

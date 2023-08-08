@@ -51,7 +51,7 @@ class ContractDAO:
         return Contract.query.all()
 
     @staticmethod
-    def get_by_id(contract_id: str) -> Contract:
+    def get_by_id(contract_id: int) -> Contract:
         return Contract.query \
             .filter_by(id=contract_id) \
             .first()
@@ -61,12 +61,10 @@ class ContractDAO:
         session.add(contract)
         session.commit()
 
-    @staticmethod
-    def update():
+    def update(self):
         pass
 
-    @staticmethod
-    def delete():
+    def delete(self, contract_id):
         pass
 
 
@@ -86,12 +84,10 @@ class EventDAO:
         session.add(event)
         session.commit()
 
-    @staticmethod
-    def update():
+    def update(self):
         pass
 
-    @staticmethod
-    def delete():
+    def delete(self, event_id: int):
         pass
 
 
@@ -111,12 +107,10 @@ class EmployeeDAO:
         session.add(employee)
         session.commit()
 
-    @staticmethod
     def update(self):
         pass
 
-    @staticmethod
-    def delete(self):
+    def delete(self, employee_id: int):
         pass
 
 
