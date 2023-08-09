@@ -4,3 +4,4 @@ __pycache__
 epicevents/__pycache__
 .ssh
 epicevents.egg-info
+setup.py
