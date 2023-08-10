@@ -19,6 +19,35 @@ ACTIONS = {
     'delete': "supprimer",
 }
 
+EXCLUDED_FIELDS = [
+            "_sa_instance_state",
+            "created",
+            "id",
+            "modified",
+        ]
+
+FIELDS = {
+    'first_name': "prénom",
+    'last_name': "nom",
+    'email': "e-mail",
+    'telephone': "téléphone",
+    'company_name': "entreprise",
+    'commercial_id': "ID du commercial",
+    'client_id': "ID du client",
+    'total_amount': "Montant total",
+    'due_amount': "Montant restantà payer",
+    'status': "Etat",
+    'contract_id': "ID du contrat",
+    'start_date': "Date de début",
+    'end_date': "Date de fin",
+    'support_contact_id': "ID contact support",
+    'location': "Lieu",
+    'attendees_number': "Nombre de participants",
+    'notes': "Notes",
+    'department_id': "ID du département",
+    'encoded_hash': "Mot de passe",
+
+}
 
 class CrudView:
     @staticmethod
@@ -63,22 +92,25 @@ class CrudView:
         return action
 
     @staticmethod
-    def prompt_for_client_creation():
-        first_name = inquirer.text(message="Saisir prénom du client:").execute()
-        last_name = inquirer.text(message="Saisir nom du client:").execute()
-        email = inquirer.text(message="Saisir email du client:").execute()
-        telephone = inquirer.text(message="Saisir numéro de téléphone du client:").execute()
-        company_name = inquirer.text(message="Saisir nom de l'entreprise du client:").execute()
-        commercial_id = inquirer.text(message="Saisir id du commercial responsable:").execute()
+    def prompt_for_object_creation(obj_type: str):
+        print(f"Saisissez les données du {NAMES[obj_type]}:")
+        obj_data = {}
+        attr_list = []
+        match obj_type:
+            case 'client':
+                attr_list = Client.__table__.columns
+            case 'contract':
+                attr_list = Contract.__table__.columns
+            case 'event':
+                attr_list = Event.__table__.columns
+            case 'employee':
+                attr_list = Employee.__table__.columns
+        short_attr_list = [str(attr).replace(f"{obj_type}.", "") for attr in attr_list]
+        for attr in short_attr_list:
+            if attr not in EXCLUDED_FIELDS:
+                obj_data[attr] = inquirer.text(message=f"{FIELDS[attr]}").execute()
         print("")
-        return {
-            "first_name": first_name,
-            "last_name": last_name,
-            "email": email,
-            "telephone": telephone,
-            "company_name": company_name,
-            "commercial_id": commercial_id,
-        }
+        return obj_data
 
     @staticmethod
     def show_obj_list(obj_list: list):
@@ -99,13 +131,8 @@ class CrudView:
 
     @staticmethod
     def prompt_for_object_field_update(client: Client):
-        fields_excluded = [
-            "_sa_instance_state",
-            "created",
-            "id",
-            "modified",
-        ]
-        field_choices = [Choice(attr, name=f"{attr}: {value}") for attr, value in client.__dict__.items() if attr not in fields_excluded]
+
+        field_choices = [Choice(attr, name=f"{attr}: {value}") for attr, value in client.__dict__.items() if attr not in EXCLUDED_FIELDS]
         field_to_modify = inquirer.select(
             message="Sélectionner un champ à modifier:",
             choices=field_choices,

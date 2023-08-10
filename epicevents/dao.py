@@ -1,3 +1,5 @@
+import datetime
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -48,142 +50,190 @@ class ClientDAO:
 class ContractDAO:
     @staticmethod
     def get_all():
-        return Contract.query.all()
+        return session.query(Contract).all()
 
     @staticmethod
     def get_by_id(contract_id: int) -> Contract:
-        return Contract.query \
-            .filter_by(id=contract_id) \
-            .first()
+        return session.query(Contract).get(contract_id)
 
     @staticmethod
-    def add(contract: Contract, session) -> None:
+    def add(contract: Contract) -> None:
         session.add(contract)
         session.commit()
 
-    def update(self):
-        pass
+    def update(
+            self,
+            contract_id,
+            client_id: int = None,
+            total_amount: float = None,
+            due_amount: float = None,
+            status: str = None,
+    ):
+        db_contract = self.get_by_id(contract_id)
+        db_contract.client_id = client_id if client_id else db_contract.client_id
+        db_contract.total_amount = total_amount if total_amount else db_contract.total_amount
+        db_contract.due_amount = due_amount if due_amount else db_contract.due_amount
+        db_contract.status = status if status else db_contract.status
+        session.commit()
 
     def delete(self, contract_id):
-        pass
+        contract_db = self.get_by_id(contract_id)
+        session.delete(contract_db)
+        session.commit()
 
 
 class EventDAO:
     @staticmethod
     def get_all():
-        return Event.query.all()
+        return session.query(Event).all()
 
     @staticmethod
     def get_by_id(event_id: str) -> Event:
-        return Event.query \
-            .filter_by(id=event_id) \
-            .first()
+        return session.query(Event).get(event_id)
 
     @staticmethod
-    def add(event: Event, session) -> None:
+    def add(event: Event) -> None:
         session.add(event)
         session.commit()
 
-    def update(self):
-        pass
+    def update(
+            self,
+            event_id,
+            contract_id: int = None,
+            client_id: int = None,
+            start_date: str = None,
+            end_date: str = None,
+            support_contact_id: int = None,
+            location: str = None,
+            attendees_number: int = None,
+            notes: str = None,
+    ):
+        db_event = self.get_by_id(event_id)
+        db_event.contract_id = contract_id if contract_id else db_event.contract_id
+        db_event.client_id = client_id if client_id else db_event.client_id
+        db_event.start_date = start_date if start_date else db_event.start_date
+        db_event.end_date = end_date if end_date else db_event.end_date
+        db_event.support_contact_id = support_contact_id if support_contact_id else db_event.support_contact_id
+        db_event.location = location if location else db_event.location
+        db_event.attendees_number = attendees_number if attendees_number else db_event.attendees_number
+        db_event.notes = notes if notes else db_event.notes
+        session.commit()
 
     def delete(self, event_id: int):
-        pass
+        event_db = self.get_by_id(event_id)
+        session.delete(event_db)
+        session.commit()
 
 
 class EmployeeDAO:
     @staticmethod
     def get_all():
-        return Employee.query.all()
+        return session.query(Employee).all()
 
     @staticmethod
     def get_by_id(employee_id: str) -> Employee:
-        return Employee.query \
-            .filter_by(id=employee_id) \
-            .first()
+        return session.query(Employee).get(employee_id)
 
     @staticmethod
-    def add(employee: Employee, session) -> None:
+    def add(employee: Employee) -> None:
         session.add(employee)
         session.commit()
 
-    def update(self):
-        pass
+    def update(
+            self,
+            employee_id,
+            first_name: str = None,
+            last_name: str = None,
+            email: str = None,
+            department_id: int = None,
+            encoded_hash: str = None,
+
+    ):
+        db_employee = self.get_by_id(employee_id)
+        db_employee.first_name = first_name if first_name else db_employee.first_name
+        db_employee.last_name = last_name if last_name else db_employee.last_name
+        db_employee.email = email if email else db_employee.email
+        db_employee.department_id = department_id if department_id else db_employee.department_id
+        db_employee.encoded_hash = encoded_hash if encoded_hash else db_employee.encoded_hash
+
+        session.commit()
 
     def delete(self, employee_id: int):
-        pass
-
-
-class DepartmentDAO:
-    @staticmethod
-    def get_all():
-        return Department.query.all()
-
-    @staticmethod
-    def get_by_id(department_id: str) -> Department:
-        return Department.query \
-            .filter_by(id=department_id) \
-            .first()
-
-    @staticmethod
-    def add(department: Department, session) -> None:
-        session.add(department)
+        employee_db = self.get_by_id(employee_id)
+        session.delete(employee_db)
         session.commit()
 
-    @staticmethod
-    def update(self):
-        pass
-
-    @staticmethod
-    def delete(self):
-        pass
-
-
-class PermissionDAO:
-    @staticmethod
-    def get_all():
-        return Permission.query.all()
-
-    @staticmethod
-    def get_by_id(permission_id: str) -> Permission:
-        return Permission.query \
-            .filter_by(id=permission_id) \
-            .first()
-
-    @staticmethod
-    def add(permission: Permission, session) -> None:
-        session.add(permission)
-        session.commit()
-
-    @staticmethod
-    def update(self):
-        pass
-
-    @staticmethod
-    def delete(self):
-        pass
-
-
-class DepartmentPermissionDAO:
-    @staticmethod
-    def get_all():
-        return DepartmentPermission.query.all()
-
-    @staticmethod
-    def get_by_id(department_permission_id: str) -> DepartmentPermission:
-        return DepartmentPermission.query \
-            .filter_by(id=department_permission_id) \
-            .first()
-
-    @staticmethod
-    def add(department_permission: DepartmentPermission, session) -> None:
-        session.add(department_permission)
-        session.commit()
-
-    @staticmethod
-    def update(self):
-        pass
-
-    @staticmethod
-    def delete(self):
-        pass
+#
+# class DepartmentDAO:
+#     @staticmethod
+#     def get_all():
+#         return Department.query.all()
+#
+#     @staticmethod
+#     def get_by_id(department_id: str) -> Department:
+#         return Department.query \
+#             .filter_by(id=department_id) \
+#             .first()
+#
+#     @staticmethod
+#     def add(department: Department, session) -> None:
+#         session.add(department)
+#         session.commit()
+#
+#     @staticmethod
+#     def update(self):
+#         pass
+#
+#     @staticmethod
+#     def delete(self):
+#         pass
+#
+#
+# class PermissionDAO:
+#     @staticmethod
+#     def get_all():
+#         return Permission.query.all()
+#
+#     @staticmethod
+#     def get_by_id(permission_id: str) -> Permission:
+#         return Permission.query \
+#             .filter_by(id=permission_id) \
+#             .first()
+#
+#     @staticmethod
+#     def add(permission: Permission, session) -> None:
+#         session.add(permission)
+#         session.commit()
+#
+#     @staticmethod
+#     def update(self):
+#         pass
+#
+#     @staticmethod
+#     def delete(self):
+#         pass
+#
+#
+# class DepartmentPermissionDAO:
+#     @staticmethod
+#     def get_all():
+#         return DepartmentPermission.query.all()
+#
+#     @staticmethod
+#     def get_by_id(department_permission_id: str) -> DepartmentPermission:
+#         return DepartmentPermission.query \
+#             .filter_by(id=department_permission_id) \
+#             .first()
+#
+#     @staticmethod
+#     def add(department_permission: DepartmentPermission, session) -> None:
+#         session.add(department_permission)
+#         session.commit()
+#
+#     @staticmethod
+#     def update(self):
+#         pass
+#
+#     @staticmethod
+#     def delete(self):
+#         pass

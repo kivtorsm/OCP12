@@ -1,5 +1,7 @@
 import click
 
+from argon2 import PasswordHasher
+
 from api import API
 
 from apikey import (
@@ -11,7 +13,7 @@ from apikey import (
 from config import TWITTER_API
 from display import Display
 
-from models import Client, Contract, Event, Employee
+from models import start_db, Client, Contract, Event, Employee
 from dao import ClientDAO, ContractDAO, EventDAO, EmployeeDAO
 from views import CrudView
 
@@ -78,9 +80,9 @@ class ObjectsCrud:
 
     def create(self, obj_type: str):
         obj = None
+        obj_data = self.view.prompt_for_object_creation(obj_type)
         match obj_type:
             case 'client':
-                obj_data = self.view.prompt_for_client_creation()
                 obj = Client(
                     first_name=obj_data['first_name'],
                     last_name=obj_data['last_name'],
@@ -90,6 +92,37 @@ class ObjectsCrud:
                     commercial_id=obj_data['commercial_id'],
                 )
                 ClientDAO.add(obj)
+            case 'contract':
+                obj = Contract(
+                    client_id=obj_data['client_id'],
+                    total_amount=obj_data['total_amount'],
+                    due_amount=obj_data['due_amount'],
+                    status=obj_data['status'],
+                )
+                ContractDAO.add(obj)
+            case 'event':
+                obj = Event(
+                    client_id=obj_data['client_id'],
+                    contract_id=obj_data['contract_id'],
+                    start_date=obj_data['start_date'],
+                    end_date=obj_data['end_date'],
+                    support_contact_id=obj_data['support_contact_id'],
+                    location=obj_data['location'],
+                    attendees_number=obj_data['attendees_number'],
+                    notes=obj_data['notes'],
+                )
+                EventDAO.add(obj)
+            case 'employee':
+                ph = PasswordHasher()
+                obj_data["encoded_hash"] = ph.hash(obj_data['encoded_hash'])
+                obj = Employee(
+                    first_name=obj_data['first_name'],
+                    last_name=obj_data['last_name'],
+                    email=obj_data['email'],
+                    department_id=obj_data['department_id'],
+                    encoded_hash=obj_data['encoded_hash'],
+                )
+                EmployeeDAO.add(obj)
         self.view.prompt_for_confirmation('create', obj_type, obj)
 
     def show_all(self, obj_type: str):
@@ -156,4 +189,5 @@ class ObjectsCrud:
 
 
 if __name__ == "__main__":
+    start_db()
     cli()

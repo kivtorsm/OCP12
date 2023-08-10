@@ -12,19 +12,14 @@ from conf import Base, ENGINE
 class Event(Base):
     __tablename__ = "event"
 
-
     # Data columns
     id: Mapped[int] = mapped_column(primary_key=True)
     contract_id: Mapped[int] = mapped_column(ForeignKey('contract.id'))
     contract: Mapped["Contract"] = relationship(back_populates='events')
     client_id: Mapped[int] = mapped_column(ForeignKey('client.id'))
     client: Mapped["Client"] = relationship(back_populates='events')
-    start_date: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True),
-    )
-    end_date: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True),
-    )
+    start_date: Mapped[str] = mapped_column(String(10))
+    end_date: Mapped[str] = mapped_column(String(10))
     support_contact_id: Mapped[int] = mapped_column(ForeignKey('employee.id'))
     support_contact: Mapped["Employee"] = relationship(back_populates='events')
     location: Mapped[str] = mapped_column(String(100))
@@ -48,8 +43,8 @@ class Contract(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     client_id: Mapped[int] = mapped_column(ForeignKey('client.id'))
     client: Mapped["Client"] = relationship(back_populates='contracts')
-    total_amount: Mapped[str] = mapped_column(Float)
-    due_amount: Mapped[str] = mapped_column(Float)
+    total_amount: Mapped[float] = mapped_column(Float)
+    due_amount: Mapped[float] = mapped_column(Float)
     status: Mapped[str] = mapped_column(String(20))
     events: Mapped[List["Event"]] = relationship(
         back_populates="contract",
@@ -111,7 +106,7 @@ class Employee(Base):
     email: Mapped[str] = mapped_column(String(100))
     department_id: Mapped[int] = mapped_column(ForeignKey('department.id'))
     department: Mapped["Department"] = relationship(back_populates='employees')
-    encoded_hash: Mapped[str] = mapped_column(String(64))
+    encoded_hash: Mapped[str] = mapped_column(String(100))
     clients: Mapped[List["Client"]] = relationship(
         back_populates="commercial",
     )
@@ -120,8 +115,8 @@ class Employee(Base):
     )
 
     def __repr__(self):
-        return f"Employee {self.id}, first name {self.first_name}, last name {self.last_name}, " \
-               f"email {self.email}, department id {self.department_id}"
+        return f"Employé {self.id}, Prénom: {self.first_name}, nom: {self.last_name}, " \
+               f"email: {self.email}, département: {self.department.name}"
 
 
 class DepartmentPermission(Base):
