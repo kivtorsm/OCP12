@@ -2,6 +2,7 @@ import datetime
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import select
 
 from models import Client, Employee, Contract, Event, Department, Permission, DepartmentPermission
 
@@ -133,6 +134,10 @@ class EmployeeDAO:
     @staticmethod
     def get_by_id(employee_id: str) -> Employee:
         return session.query(Employee).get(employee_id)
+
+    @staticmethod
+    def get_by_email(employee_email: str) -> Employee:
+        return session.query(Employee).filter_by(email=employee_email)[0]
 
     @staticmethod
     def add(employee: Employee) -> None:

@@ -1,10 +1,18 @@
 import getpass
+import click
+
+from typing import Tuple, Union
+
+from rich.panel import Panel
+from rich import box
 
 from InquirerPy import prompt, inquirer
 from InquirerPy.base.control import Choice
 from InquirerPy.separator import Separator
 
 from models import Client, Contract, Event, Employee
+from display import Display
+
 
 NAMES = {
             'client': "client",
@@ -157,3 +165,28 @@ class CrudView:
 
         print(obj)
         print("")
+
+
+class LoginView:
+    def __init__(self):
+        self.display = Display()
+
+    def prompt_login_details(self) -> Tuple[str, str]:
+
+        self.display.log(
+            "Saisissez votre email et votre mot de passe et tapez entrée, ou appuyez sur ctrl+c pour sortir : "
+        )
+        email = getpass.getpass(prompt="Email :")
+        password = getpass.getpass(prompt="Mot de passe :")
+        return email, password
+
+    def succesful_login(self):
+        click.echo("Vous êtes bien connectés")
+
+    def already_logged_in(self):
+        click.echo(
+            "Vous êtes déjà connectés ! \nEssayez --relogin pour mettre à jour vos informations de connexion!"
+        )
+
+    def token_expired(self, err: Exception):
+        click.echo(f"{err} : Token périmé, connectez-vous à nouveau.")
