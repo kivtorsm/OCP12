@@ -35,38 +35,90 @@ def cli():
     pass
 
 
+def find_netrc_token(machine: str, raise_errors=False):
+    NETRC_FILES = (".netrc", "_netrc")
+    netrc_file = os.environ.get("NETRC")
+    if netrc_file is not None:
+        netrc_locations = (netrc_file,)
+    else:
+        netrc_locations = ("~/{}".format(f) for f in NETRC_FILES)
+
+    try:
+        from netrc import netrc, NetrcParseError
+
+        netrc_path = None
+
+        for f in netrc_locations:
+            try:
+                loc = os.path.expanduser(f)
+            except KeyError:
+                return
+
+            if os.path.exists(loc):
+                netrc_path = loc
+                break
+
+        if netrc_path is None:
+            return
+
+        ri = urlparse(machine)
+
+        host = ri.netloc.split(":")[0]
+
+        try:
+            _netrc = netrc(netrc_path).authenticators(host)
+            if _netrc:
+                login_i = 0 if _netrc[0] else 1
+                return (_netrc[login_i], _netrc[2])
+        except (NetrcParseError, IOError):
+            if raise_errors:
+                raise
+
+    except (ImportError, AttributeError):
+        pass
+
+
+def read_credentials(machine: str) -> Union[Tuple[str, str], None]:
+    user, token = None, None
+    auth = find_netrc_token(machine, True)
+    if auth and auth[0] and auth[1]:
+        user = auth[0]
+        token = auth[1]
+        return (user, token)
+
+
+def is_authenticated(func=None):
+    credentials = read_credentials(HOST)
+    existing_token = credentials is not None
+    if existing_token:
+        try:
+            jwt.decode(credentials[1], key=SECRET, algorithms="HS256")
+            if func is not None:
+                func()
+            # return True
+        except jwt.ExpiredSignatureError:
+            click.echo(f"Connexion expirée, connectez-vous à nouveau.")
+            # return False
+    # else:
+    #     return False
+
+
 @cli.command("login")
 @click.option("--relogin", "-r", is_flag=True, help="Force a relogin.")
 def login(relogin):
     login = Login()
-    credentials = login.read_credentials(HOST)
-    existing_token = credentials is not None
 
-    if relogin:
-        existing_token = False
-    if not existing_token:
-        login.create_token()
-        login.view.succesful_login()
+    if relogin or not is_authenticated():
+        login.authenticate()
     else:
-        try:
-            jwt.decode(credentials[1], key=SECRET, algorithms="HS256")
-            login.view.already_logged_in()
-
-        except jwt.ExpiredSignatureError as err:
-            login.view.token_expired(err)
-
-
-@cli.command("start")
-def start():
-    obj_crud = ObjectsCrud()
-    obj_crud.main_menu()
+        login.view.already_logged_in()
 
 
 class Login:
     def __init__(self):
         self.view = LoginView()
 
-    def create_token(self):
+    def authenticate(self):
         (email, password) = self.view.prompt_login_details()
         encoded_hash = self.get_hash(email)
         try:
@@ -74,66 +126,17 @@ class Login:
             password_hasher.verify(encoded_hash, password)
             payload = {
                 "email": email,
-                "exp": datetime.now(tz=timezone.utc) + timedelta(seconds=5)
+                "exp": datetime.now(tz=timezone.utc) + timedelta(seconds=30)
             }
             token = jwt.encode(payload=payload, key=SECRET)
 
             self.write_netrc(HOST, email, token)
-            self.read_credentials(HOST)
+            read_credentials(HOST)
+            self.view.succesful_login()
 
         except exceptions.VerifyMismatchError as err:
             display.error(f"{err} : incorrect login or password")
 
-    def read_credentials(self, machine: str) -> Union[Tuple[str, str], None]:
-        user, token = None, None
-        auth = self.find_netrc_token(machine, True)
-        if auth and auth[0] and auth[1]:
-            user = auth[0]
-            token = auth[1]
-            return (user, token)
-
-    @staticmethod
-    def find_netrc_token(machine: str, raise_errors=False):
-        NETRC_FILES = (".netrc", "_netrc")
-        netrc_file = os.environ.get("NETRC")
-        if netrc_file is not None:
-            netrc_locations = (netrc_file,)
-        else:
-            netrc_locations = ("~/{}".format(f) for f in NETRC_FILES)
-
-        try:
-            from netrc import netrc, NetrcParseError
-
-            netrc_path = None
-
-            for f in netrc_locations:
-                try:
-                    loc = os.path.expanduser(f)
-                except KeyError:
-                    return
-
-                if os.path.exists(loc):
-                    netrc_path = loc
-                    break
-
-            if netrc_path is None:
-                return
-
-            ri = urlparse(machine)
-
-            host = ri.netloc.split(":")[0]
-
-            try:
-                _netrc = netrc(netrc_path).authenticators(host)
-                if _netrc:
-                    login_i = 0 if _netrc[0] else 1
-                    return (_netrc[login_i], _netrc[2])
-            except (NetrcParseError, IOError):
-                if raise_errors:
-                    raise
-
-        except (ImportError, AttributeError):
-            pass
 
     @staticmethod
     def get_hash(email):
@@ -310,6 +313,13 @@ class ObjectsCrud:
             case 'employee':
                 EmployeeDAO.delete(EmployeeDAO, obj.id)
         self.view.prompt_for_confirmation('delete', obj_type, obj)
+
+
+@cli.command("start")
+@is_authenticated
+def start():
+    obj_crud = ObjectsCrud()
+    obj_crud.main_menu()
 
 
 if __name__ == "__main__":

@@ -187,6 +187,3 @@ class LoginView:
         click.echo(
             "Vous êtes déjà connectés ! \nEssayez --relogin pour mettre à jour vos informations de connexion!"
         )
-
-    def token_expired(self, err: Exception):
-        click.echo(f"{err} : Token périmé, connectez-vous à nouveau.")
