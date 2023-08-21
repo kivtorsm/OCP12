@@ -88,30 +88,43 @@ def read_credentials(machine: str) -> Union[Tuple[str, str], None]:
 
 
 def is_authenticated(func=None):
-    credentials = read_credentials(HOST)
-    existing_token = credentials is not None
-    if existing_token:
-        try:
-            jwt.decode(credentials[1], key=SECRET, algorithms="HS256")
-            if func is not None:
-                func()
-            # return True
-        except jwt.ExpiredSignatureError:
-            click.echo(f"Connexion expirée, connectez-vous à nouveau.")
-            # return False
-    # else:
-    #     return False
+    def wrapper():
+        credentials = read_credentials(HOST)
+        existing_token = credentials is not None
+        if existing_token:
+            try:
+                jwt.decode(credentials[1], key=SECRET, algorithms="HS256")
+                if func is not None:
+                    func()
+                # return True
+            except jwt.ExpiredSignatureError:
+                click.echo(f"Connexion expirée, connectez-vous à nouveau.")
+                # return False
+        # else:
+        #     return False
+    return wrapper
+
+
+def is_allowed(func):
+    allowed = "client_create"
+
+    def wrapper(*args, **kwargs):
+        # function = f"{kwargs['obj_type']}_{func.__name__}"
+        for arg in args:
+            click.echo(arg)
+        function = f"{kwargs['obj_type']}_{func.__name__}"
+
+        if function == allowed:
+            func(*args, **kwargs)
+        else:
+            click.echo("not allowed")
+    return wrapper
 
 
 @cli.command("login")
-@click.option("--relogin", "-r", is_flag=True, help="Force a relogin.")
-def login(relogin):
+def login():
     login = Login()
-
-    if relogin or not is_authenticated():
-        login.authenticate()
-    else:
-        login.view.already_logged_in()
+    login.authenticate()
 
 
 class Login:
@@ -193,18 +206,19 @@ class ObjectsCrud:
             choice = self.view.prompt_for_crud_menu(obj_type)
             match choice:
                 case 'create':
-                    self.create(obj_type)
+                    self.create(obj_type=obj_type)
                 case 'show_all':
-                    self.show_all(obj_type)
+                    self.show_all(obj_type=obj_type)
                 case 'show_details':
-                    self.show_by_id(obj_type)
+                    self.show_by_id(obj_type=obj_type)
                 case 'update':
-                    self.update(obj_type)
+                    self.update(obj_type=obj_type)
                 case 'delete':
-                    self.delete(obj_type)
+                    self.delete(obj_type=obj_type)
                 case 'exit':
                     break
 
+    @is_allowed
     def create(self, obj_type: str):
         obj = None
         obj_data = self.view.prompt_for_object_creation(obj_type)
