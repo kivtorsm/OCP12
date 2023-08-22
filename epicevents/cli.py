@@ -14,7 +14,7 @@ from urllib.parse import urlparse
 from display import Display
 
 from models import start_db, Client, Contract, Event, Employee
-from dao import ClientDAO, ContractDAO, EventDAO, EmployeeDAO
+from dao import ClientDAO, ContractDAO, EventDAO, EmployeeDAO, DepartmentPermissionDAO, PermissionDAO
 from views import CrudView, LoginView
 
 
@@ -87,6 +87,10 @@ def read_credentials(machine: str) -> Union[Tuple[str, str], None]:
         return (user, token)
 
 
+def get_token_payload(token):
+    return jwt.decode(token, key=SECRET, algorithms="HS256")
+
+
 def is_authenticated(func=None):
     def wrapper():
         credentials = read_credentials(HOST)
@@ -106,15 +110,20 @@ def is_authenticated(func=None):
 
 
 def is_allowed(func):
-    allowed = "client_create"
+    # allowed = "client_create"
 
     def wrapper(*args, **kwargs):
-        # function = f"{kwargs['obj_type']}_{func.__name__}"
-        for arg in args:
-            click.echo(arg)
+        credentials = read_credentials(HOST)
+        token = credentials[1]
+        payload = get_token_payload(token)
+        department_permissions = DepartmentPermissionDAO.get_by_department_id(payload['department_id'])
+        click.echo(department_permissions)
+        allowed = [PermissionDAO.get_by_id(dep_permission.permission_id).name for dep_permission in department_permissions]
+        click.echo(allowed)
+
         function = f"{kwargs['obj_type']}_{func.__name__}"
 
-        if function == allowed:
+        if function in allowed:
             func(*args, **kwargs)
         else:
             click.echo("not allowed")
@@ -133,12 +142,14 @@ class Login:
 
     def authenticate(self):
         (email, password) = self.view.prompt_login_details()
-        encoded_hash = self.get_hash(email)
+        employee = self.get_employee(email)
+
         try:
             password_hasher = PasswordHasher()
-            password_hasher.verify(encoded_hash, password)
+            password_hasher.verify(employee.encoded_hash, password)
             payload = {
                 "email": email,
+                "department_id": employee.department_id,
                 "exp": datetime.now(tz=timezone.utc) + timedelta(seconds=30)
             }
             token = jwt.encode(payload=payload, key=SECRET)
@@ -152,9 +163,9 @@ class Login:
 
 
     @staticmethod
-    def get_hash(email):
+    def get_employee(email):
         employee = EmployeeDAO.get_by_email(email)
-        return employee.encoded_hash
+        return employee
 
     @staticmethod
     def write_netrc(host: str, user: str, token: str):

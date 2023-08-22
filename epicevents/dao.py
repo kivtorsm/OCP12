@@ -194,16 +194,15 @@ class EmployeeDAO:
 #         pass
 #
 #
-# class PermissionDAO:
-#     @staticmethod
-#     def get_all():
-#         return Permission.query.all()
-#
-#     @staticmethod
-#     def get_by_id(permission_id: str) -> Permission:
-#         return Permission.query \
-#             .filter_by(id=permission_id) \
-#             .first()
+class PermissionDAO:
+    @staticmethod
+    def get_all():
+        return Permission.query.all()
+
+    @staticmethod
+    def get_by_id(permission_id: str) -> Permission:
+        return session.query(Permission).get(permission_id)
+
 #
 #     @staticmethod
 #     def add(permission: Permission, session) -> None:
@@ -219,26 +218,28 @@ class EmployeeDAO:
 #         pass
 #
 #
-# class DepartmentPermissionDAO:
-#     @staticmethod
-#     def get_all():
-#         return DepartmentPermission.query.all()
-#
-#     @staticmethod
-#     def get_by_id(department_permission_id: str) -> DepartmentPermission:
-#         return DepartmentPermission.query \
-#             .filter_by(id=department_permission_id) \
-#             .first()
-#
-#     @staticmethod
-#     def add(department_permission: DepartmentPermission, session) -> None:
-#         session.add(department_permission)
-#         session.commit()
-#
-#     @staticmethod
-#     def update(self):
-#         pass
-#
-#     @staticmethod
-#     def delete(self):
-#         pass
+class DepartmentPermissionDAO:
+    @staticmethod
+    def get_all():
+        return DepartmentPermission.query.all()
+
+    @staticmethod
+    def get_by_id(department_permission_id: str) -> DepartmentPermission:
+        return session.query(DepartmentPermission).get(department_permission_id)
+
+    @staticmethod
+    def get_by_department_id(department_id: str) -> DepartmentPermission:
+        return session.query(DepartmentPermission).filter_by(department_id=department_id)
+
+    # @staticmethod
+    # def add(department_permission: DepartmentPermission, session) -> None:
+    #     session.add(department_permission)
+    #     session.commit()
+    #
+    # @staticmethod
+    # def update(self):
+    #     pass
+    #
+    # @staticmethod
+    # def delete(self):
+    #     pass
