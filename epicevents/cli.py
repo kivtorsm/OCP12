@@ -13,10 +13,10 @@ from urllib.parse import urlparse
 
 from display import Display
 
-from models import start_db, Client, Contract, Event, Employee
-from dao import ClientDAO, ContractDAO, EventDAO, EmployeeDAO, DepartmentPermissionDAO, PermissionDAO
+from models import start_db, Client, Contract, Event, Employee, Permission, DepartmentPermission, Department
+from dao import ClientDAO, ContractDAO, EventDAO, EmployeeDAO, DepartmentPermissionDAO, PermissionDAO, DepartmentDAO
 from views import CrudView, LoginView
-
+from conf import session
 
 display = Display()
 
@@ -91,7 +91,19 @@ def get_token_payload(token):
     return jwt.decode(token, key=SECRET, algorithms="HS256")
 
 
-def is_authenticated(func=None):
+def get_token():
+    credentials = read_credentials(HOST)
+    return credentials[1]
+
+
+def get_token_user_id():
+    token = get_token()
+    payload = get_token_payload(token)
+    user = EmployeeDAO.get_by_email(payload['email'])
+    return user.id
+
+
+def is_authenticated(func):
     def wrapper():
         credentials = read_credentials(HOST)
         existing_token = credentials is not None
@@ -110,23 +122,83 @@ def is_authenticated(func=None):
 
 
 def is_allowed(func):
-    # allowed = "client_create"
+    allowed = "client_create"
 
     def wrapper(*args, **kwargs):
-        credentials = read_credentials(HOST)
-        token = credentials[1]
-        payload = get_token_payload(token)
-        department_permissions = DepartmentPermissionDAO.get_by_department_id(payload['department_id'])
-        click.echo(department_permissions)
-        allowed = [PermissionDAO.get_by_id(dep_permission.permission_id).name for dep_permission in department_permissions]
-        click.echo(allowed)
 
-        function = f"{kwargs['obj_type']}_{func.__name__}"
-
-        if function in allowed:
+        if func.__name__ == ('show_all' or 'show_details'):
             func(*args, **kwargs)
         else:
-            click.echo("not allowed")
+            # Check which object types the user is allowed to create
+            credentials = read_credentials(HOST)
+            token = credentials[1]
+            payload = get_token_payload(token)
+            department_id = payload['department_id']
+            department = DepartmentDAO.get_by_id(department_id)
+            department_permissions = department.department_permissions
+            employee_id = EmployeeDAO.get_by_email(payload['email']).id
+            EMPLOYEE_FIELD_NAMES = {
+                'contract': f"client.commercial_id={employee_id}",
+                'event': f"support_contact_id={employee_id}",
+                'client': f"commercial_id={employee_id}",
+            }
+            obj_type_allowed = [
+                dpt_perm.permission.object_type
+                for dpt_perm in department_permissions
+                if dpt_perm.permission.crud_action == func.__name__
+            ]
+
+            if func.__name__ == ('create' or 'delete'):
+                # Verify that the object type creation requested in the function is in the list of types allowed
+                if kwargs['obj_type'] in obj_type_allowed:
+                    func(*args, **kwargs)
+                else:
+                    click.echo("not allowed '\n")
+            elif func.__name__ == 'update':
+                # check if user has permission for that type of object
+                if kwargs['obj_type'] in obj_type_allowed:
+                    # objects allowed in database
+                    objects_allowed = [
+                        dpt_perm.permission.object_list
+                        for dpt_perm in department_permissions
+                        if dpt_perm.permission.crud_action == func.__name__
+                    ]
+                    object_list_allowed = None
+
+                    # construction of command string to get list of allowed objects
+                    # general case (all)
+                    match objects_allowed[0]:
+                        case 'all':
+                            match kwargs['obj_type']:
+                                case 'client':
+                                    object_list_allowed = ClientDAO.get_all()
+                                case 'contract':
+                                    object_list_allowed = ContractDAO.get_all()
+                                case 'event':
+                                    object_list_allowed = EventDAO.get_all()
+                    # other cases
+                    match objects_allowed[0]:
+                        case 'owned':
+                            match kwargs['obj_type']:
+                                case 'client':
+                                    object_list_allowed = ClientDAO.filter_by_attr(commercial_id=employee_id)
+                                case 'contract':
+                                    object_list_allowed = ContractDAO.filter_by_attr(client__commercial_id=employee_id)
+                                case 'event':
+                                    object_list_allowed = EventDAO.filter_by_attr(support_contact_id=employee_id)
+
+                    # check if the object included in the attributes is included in the allowed_list
+                    if kwargs['obj'] in object_list_allowed:
+                        # fields allowed in database
+                        fields_allowed = [
+                            dpt_perm.permission.object_field
+                            for dpt_perm in department_permissions
+                            if dpt_perm.permission.crud_action == func.__name__
+                        ][0]
+                        if fields_allowed == 'all':
+                            fields_allowed = None
+                        func(*args, **kwargs, obj_fields_allowed=fields_allowed)
+
     return wrapper
 
 
@@ -150,7 +222,7 @@ class Login:
             payload = {
                 "email": email,
                 "department_id": employee.department_id,
-                "exp": datetime.now(tz=timezone.utc) + timedelta(seconds=30)
+                "exp": datetime.now(tz=timezone.utc) + timedelta(seconds=500)
             }
             token = jwt.encode(payload=payload, key=SECRET)
 
@@ -160,7 +232,6 @@ class Login:
 
         except exceptions.VerifyMismatchError as err:
             display.error(f"{err} : incorrect login or password")
-
 
     @staticmethod
     def get_employee(email):
@@ -223,7 +294,8 @@ class ObjectsCrud:
                 case 'show_details':
                     self.show_by_id(obj_type=obj_type)
                 case 'update':
-                    self.update(obj_type=obj_type)
+                    obj = self.get_object_by_id(obj_type, 'update')
+                    self.update(obj_type=obj_type, obj=obj)
                 case 'delete':
                     self.delete(obj_type=obj_type)
                 case 'exit':
@@ -235,13 +307,14 @@ class ObjectsCrud:
         obj_data = self.view.prompt_for_object_creation(obj_type)
         match obj_type:
             case 'client':
+                commercial_id = get_token_user_id()
                 obj = Client(
                     first_name=obj_data['first_name'],
                     last_name=obj_data['last_name'],
                     email=obj_data['email'],
                     telephone=obj_data['telephone'],
                     company_name=obj_data['company_name'],
-                    commercial_id=obj_data['commercial_id'],
+                    commercial_id=commercial_id,
                 )
                 ClientDAO.add(obj)
             case 'contract':
@@ -308,10 +381,11 @@ class ObjectsCrud:
         obj = self.get_object_by_id(obj_type, 'show')
         self.view.show_details(obj)
 
-    def update(self, obj_type: str):
-        obj = self.get_object_by_id(obj_type, 'update')
+    @is_allowed
+    def update(self, obj_type: str, obj: object, obj_fields_allowed: list = None):
+
         self.view.show_details(obj)
-        field, new_value = self.view.prompt_for_object_field_update(obj)
+        field, new_value = self.view.prompt_for_object_field_update(obj, obj_fields_allowed)
         command = ""
         match obj_type:
             case 'client':

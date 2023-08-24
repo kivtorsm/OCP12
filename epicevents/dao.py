@@ -19,6 +19,24 @@ class ClientDAO:
         return session.query(Client).get(client_id)
 
     @staticmethod
+    def filter_by_attr(
+            # first_name: str = None,
+            # last_name: str = None,
+            # email: str = None,
+            # telephone: str = None,
+            # company_name: str = None,
+            commercial_id: int = None,
+    ) -> list[Client]:
+        return session.execute(select(Client).filter_by(
+            # first_name=first_name,
+            # last_name=last_name,
+            # email=email,
+            # telephone=telephone,
+            # company_name=company_name,
+            commercial_id=commercial_id,
+        )).scalars().all()
+
+    @staticmethod
     def add(client: Client) -> None:
         session.add(client)
         session.commit()
@@ -58,6 +76,22 @@ class ContractDAO:
         return session.query(Contract).get(contract_id)
 
     @staticmethod
+    def filter_by_attr(
+            client_id: int = None,
+            total_amount: float = None,
+            due_amount: float = None,
+            status: str = None,
+            client: Client = None
+
+    ) -> list[Client]:
+        return session.execute(select(Client).filter_by(
+            client_id=client_id,
+            total_amount=total_amount,
+            due_amount=due_amount,
+            status=status,
+        )).scalars().all()
+
+    @staticmethod
     def add(contract: Contract) -> None:
         session.add(contract)
         session.commit()
@@ -89,8 +123,31 @@ class EventDAO:
         return session.query(Event).all()
 
     @staticmethod
-    def get_by_id(event_id: str) -> Event:
+    def get_by_id(event_id: int) -> Event:
         return session.query(Event).get(event_id)
+
+    @staticmethod
+    def filter_by_attr(
+            contract_id: str = None,
+            client_id: str = None,
+            start_date: str = None,
+            end_date: str = None,
+            support_contact_id: int = None,
+            location: str = None,
+            attendees_number: str = None,
+            notes: str = None,
+
+    ) -> list[Client]:
+        return session.execute(select(Client).filter_by(
+            contract_id=contract_id,
+            client_id=client_id,
+            start_date=start_date,
+            end_date=end_date,
+            support_contact_id=support_contact_id,
+            location=location,
+            attendees_number=attendees_number,
+            notes=notes,
+        )).scalars().all()
 
     @staticmethod
     def add(event: Event) -> None:
@@ -132,7 +189,7 @@ class EmployeeDAO:
         return session.query(Employee).all()
 
     @staticmethod
-    def get_by_id(employee_id: str) -> Employee:
+    def get_by_id(employee_id: int) -> Employee:
         return session.query(Employee).get(employee_id)
 
     @staticmethod
@@ -168,17 +225,15 @@ class EmployeeDAO:
         session.delete(employee_db)
         session.commit()
 
-#
-# class DepartmentDAO:
-#     @staticmethod
-#     def get_all():
-#         return Department.query.all()
-#
-#     @staticmethod
-#     def get_by_id(department_id: str) -> Department:
-#         return Department.query \
-#             .filter_by(id=department_id) \
-#             .first()
+
+class DepartmentDAO:
+    @staticmethod
+    def get_all():
+        return session.query(Department).all()
+
+    @staticmethod
+    def get_by_id(department_id: int) -> Department:
+        return session.query(Department).get(department_id)
 #
 #     @staticmethod
 #     def add(department: Department, session) -> None:
@@ -193,15 +248,25 @@ class EmployeeDAO:
 #     def delete(self):
 #         pass
 #
-#
+
+
 class PermissionDAO:
     @staticmethod
-    def get_all():
-        return Permission.query.all()
+    def get_all() -> list:
+        return session.query(Permission).all()
 
     @staticmethod
-    def get_by_id(permission_id: str) -> Permission:
+    def get_by_id(permission_id: int) -> Permission:
         return session.query(Permission).get(permission_id)
+
+    @staticmethod
+    def filter_by(crud_action=None, object_type=None, object_list=None, object_field=None) -> list:
+        return session.query(Permission).filter_by(
+            crud_action=crud_action,
+            object_type=object_type,
+            object_list=object_list,
+            object_field=object_field,
+        )
 
 #
 #     @staticmethod
@@ -216,19 +281,19 @@ class PermissionDAO:
 #     @staticmethod
 #     def delete(self):
 #         pass
-#
-#
+
+
 class DepartmentPermissionDAO:
     @staticmethod
-    def get_all():
-        return DepartmentPermission.query.all()
+    def get_all() -> list:
+        return session.query(DepartmentPermission).all()
 
     @staticmethod
-    def get_by_id(department_permission_id: str) -> DepartmentPermission:
+    def get_by_id(department_permission_id: int) -> DepartmentPermission:
         return session.query(DepartmentPermission).get(department_permission_id)
 
     @staticmethod
-    def get_by_department_id(department_id: str) -> DepartmentPermission:
+    def get_by_department_id(department_id: int) -> list:
         return session.query(DepartmentPermission).filter_by(department_id=department_id)
 
     # @staticmethod

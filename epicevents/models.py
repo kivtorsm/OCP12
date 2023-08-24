@@ -128,9 +128,13 @@ class DepartmentPermission(Base):
     department: Mapped["Department"] = relationship(back_populates='department_permissions')
     permission_id: Mapped[int] = mapped_column(ForeignKey('permission.id'))
     permission: Mapped["Permission"] = relationship(back_populates='department_permissions')
+
     def __repr__(self):
-        return f"Department permission {self.id}, department {self.deparment.name}, " \
-               f"permission {self.permission.name}"
+        return f"(Department permission {self.id}, department {self.department.name}, " \
+               f"crud action {self.permission.crud_action}," \
+               f"object type {self.permission.object_type}," \
+               f"object list {self.permission.object_list}," \
+               f"object field {self.permission.object_field})"
 
 
 class Department(Base):
@@ -155,13 +159,20 @@ class Permission(Base):
 
     # Data columns
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(100))
+    object_type: Mapped[str] = mapped_column(String(100))
+    crud_action: Mapped[str] = mapped_column(String(20))
+    object_type: Mapped[str] = mapped_column(String(30))
+    object_list: Mapped[str] = mapped_column(String(20))
+    object_field: Mapped[str] = mapped_column(String(300))
     department_permissions: Mapped[List["DepartmentPermission"]] = relationship(
         back_populates="permission",
     )
 
     def __repr__(self):
-        return f"Permission {self.id}, name {self.name}"
+        return f"Permission {self.id}, crud action {self.crud_action}, " \
+               f"object type {self.object_type}, " \
+               f"object list {self.object_list}, " \
+               f"object field {self.object_field}"
 
 
 def start_db():

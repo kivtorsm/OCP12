@@ -32,6 +32,7 @@ EXCLUDED_FIELDS = [
             "created",
             "id",
             "modified",
+            "commercial_id",
         ]
 
 FIELDS = {
@@ -138,9 +139,19 @@ class CrudView:
         return obj_id
 
     @staticmethod
-    def prompt_for_object_field_update(client: Client):
+    def prompt_for_object_field_update(obj: object, allowed_fields: list = None) -> (str, str):
+        allowed_fields = allowed_fields if allowed_fields else [
+            attr
+            for attr, value
+            in obj.__dict__.items()
+        ]
 
-        field_choices = [Choice(attr, name=f"{attr}: {value}") for attr, value in client.__dict__.items() if attr not in EXCLUDED_FIELDS]
+        field_choices = [
+            Choice(attr, name=f"{attr}: {value}")
+            for attr, value
+            in obj.__dict__.items()
+            if (attr in allowed_fields and attr not in EXCLUDED_FIELDS)
+        ]
         field_to_modify = inquirer.select(
             message="Sélectionner un champ à modifier:",
             choices=field_choices,
