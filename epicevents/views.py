@@ -25,7 +25,9 @@ ACTIONS = {
     'show': "consulter",
     'update': "mettre à jour",
     'delete': "supprimer",
+    'create': "créer",
 }
+
 
 EXCLUDED_FIELDS = [
             "_sa_instance_state",
@@ -33,6 +35,7 @@ EXCLUDED_FIELDS = [
             "id",
             "modified",
             "commercial_id",
+            "support_contact_id",
         ]
 
 FIELDS = {
@@ -60,18 +63,17 @@ FIELDS = {
 
 class CrudView:
     @staticmethod
-    def prompt_for_main_menu():
+    def prompt_for_main_menu(allowed_objects: list = None):
         choices = [
-            Choice('client', name="Clients"),
-            Choice('contract', name="Contrats"),
-            Choice('event', name="Evènements"),
-            Choice('employee', name="Collaborateurs"),
-            Separator(),
-            Choice('exit', name="Fermer application"),
+            obj for obj in allowed_objects if obj is not None
         ]
+        obj_choices = [Choice(obj, name=f"{NAMES[obj].capitalize()}s") for obj in choices]
+        obj_choices.append(Separator())
+        obj_choices.append(Choice('exit', name="Fermer application"))
+
         action = inquirer.select(
             message="Choisissez un menu:",
-            choices=choices,
+            choices=obj_choices,
             default=None,
         ).execute()
         print("")
@@ -79,23 +81,34 @@ class CrudView:
         return action
 
     @staticmethod
-    def prompt_for_crud_menu(obj_type: str):
-
+    def prompt_for_crud_menu(obj_type: str, crud_actions_allowed: list = None):
+        ACTIONS_LONG = {
+            'show': f"consulter tous les {NAMES[obj_type]}s",
+            'show_details': f"consulter les détails d'un {NAMES[obj_type]}",
+            'update': f"mettre à jour un {NAMES[obj_type]}",
+            'delete': f"supprimer un {NAMES[obj_type]}",
+            'create': f"créer un {NAMES[obj_type]}",
+        }
         choices = [
-            Choice('create', name=f"Créer un {NAMES[obj_type]}"),
+            action for action in crud_actions_allowed if action is not None
+        ]
+        crud_choices = [
             Choice('show_all', name=f"Consulter la liste des {NAMES[obj_type]}s"),
             Choice('show_details', name=f"Consulter les détails d'un {NAMES[obj_type]}"),
-            Choice('update', name=f"Modifier {NAMES[obj_type]}"),
-            Choice('delete', name=f"Supprimer un {NAMES[obj_type]}"),
-            Separator(),
-            Choice('exit', name="Menu principal"),
         ]
+        for action in choices:
+            crud_choices.append(
+                Choice(action, name=f"{ACTIONS_LONG[action].capitalize()}")
+            )
+        crud_choices.append(Separator())
+        crud_choices.append(Choice('exit', name="Menu principal"))
 
         action = inquirer.select(
             message="Sélectionner une action:",
-            choices=choices,
+            choices=crud_choices,
             default=None,
         ).execute()
+
         print("")
 
         return action

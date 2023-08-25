@@ -147,8 +147,22 @@ def is_allowed(func):
                 for dpt_perm in department_permissions
                 if dpt_perm.permission.crud_action == func.__name__
             ]
-
-            if func.__name__ == ('create' or 'delete'):
+            if func.__name__ == 'main_menu':
+                objects_allowed = list(dict.fromkeys([
+                    PermissionDAO.get_by_id(dpt_permission.permission_id).object_type
+                    for dpt_permission
+                    in DepartmentPermissionDAO.get_all()
+                ]))
+                func(*args, **kwargs, objects_allowed=objects_allowed)
+            if func.__name__ == 'crud_menu':
+                crud_actions_allowed = list(dict.fromkeys([
+                    permission.crud_action
+                    for permission
+                    in [PermissionDAO.get_by_id(dpt_permission.permission_id) for dpt_permission in department_permissions]
+                    if permission.object_type == kwargs['obj_type']
+                ]))
+                func(*args, **kwargs, crud_actions_allowed=crud_actions_allowed)
+            elif func.__name__ == ('create' or 'delete'):
                 # Verify that the object type creation requested in the function is in the list of types allowed
                 if kwargs['obj_type'] in obj_type_allowed:
                     func(*args, **kwargs)
@@ -184,6 +198,7 @@ def is_allowed(func):
                                     object_list_allowed = ClientDAO.filter_by_attr(commercial_id=employee_id)
                                 case 'contract':
                                     object_list_allowed = ContractDAO.filter_by_attr(client__commercial_id=employee_id)
+                                    # TODO: adapt this part for filter on indirect objects47
                                 case 'event':
                                     object_list_allowed = EventDAO.filter_by_attr(support_contact_id=employee_id)
 
@@ -275,17 +290,19 @@ class ObjectsCrud:
     def __init__(self):
         self.view = CrudView()
 
-    def main_menu(self):
+    @is_allowed
+    def main_menu(self, objects_allowed: list = None):
         while True:
-            choice = self.view.prompt_for_main_menu()
+            choice = self.view.prompt_for_main_menu(objects_allowed)
             if choice == 'exit':
                 exit()
             else:
-                self.crud_menu(choice)
+                self.crud_menu(obj_type=choice)
 
-    def crud_menu(self, obj_type: str):
+    @is_allowed
+    def crud_menu(self, obj_type: str, crud_actions_allowed: list = None):
         while True:
-            choice = self.view.prompt_for_crud_menu(obj_type)
+            choice = self.view.prompt_for_crud_menu(obj_type, crud_actions_allowed=crud_actions_allowed)
             match choice:
                 case 'create':
                     self.create(obj_type=obj_type)
