@@ -35,7 +35,6 @@ EXCLUDED_FIELDS = [
             "id",
             "modified",
             "commercial_id",
-            "support_contact_id",
             "status",
         ]
 
@@ -131,9 +130,10 @@ class CrudView:
                 attr_list = Contract.__table__.columns.keys()
             case 'event':
                 attr_list = Event.__table__.columns.keys()
-                # remove client_id only for event for client_id is related to the contract_id
+                # remove client_id and support_contact_id only for event for client_id is related to the contract_id
                 # thus this is a specific case and cannot be added to the global list of fields to be excluded
                 attr_list.remove('client_id')
+                attr_list.remove('support_contact_id')
             case 'employee':
                 attr_list = Employee.__table__.columns.keys()
         for attr in attr_list:
@@ -166,7 +166,6 @@ class CrudView:
             for attr, value
             in obj.__dict__.items()
         ]
-
         field_choices = [
             Choice(attr, name=f"{attr}: {value}")
             for attr, value

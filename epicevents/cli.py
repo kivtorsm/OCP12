@@ -245,7 +245,7 @@ class ObjectsCrud:
     def update(self, obj_type: str, obj: object, obj_fields_allowed: list = None):
 
         self.view.show_details(obj)
-        field, new_value = self.view.prompt_for_object_field_update(obj, obj_fields_allowed)
+        field, new_value = self.view.prompt_for_object_field_update(obj, allowed_fields=obj_fields_allowed)
         command = ""
         match obj_type:
             case 'client':

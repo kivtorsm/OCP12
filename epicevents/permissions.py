@@ -189,9 +189,10 @@ def is_allowed(func):
                         fields_allowed = [
                             dpt_perm.permission.object_field
                             for dpt_perm in department_permissions
-                            if dpt_perm.permission.crud_action == func.__name__
-                        ][0]
-                        if fields_allowed == 'all':
+                            if (dpt_perm.permission.crud_action == func.__name__
+                               and dpt_perm.permission.object_type == kwargs['obj_type'])
+                        ]
+                        if fields_allowed[0] == 'all':
                             fields_allowed = None
                         func(*args, **kwargs, obj_fields_allowed=fields_allowed)
                     else:
