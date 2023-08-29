@@ -20,11 +20,11 @@ class Event(Base):
     client: Mapped["Client"] = relationship(back_populates='events')
     start_date: Mapped[str] = mapped_column(String(10))
     end_date: Mapped[str] = mapped_column(String(10))
-    support_contact_id: Mapped[int] = mapped_column(ForeignKey('employee.id'))
+    support_contact_id: Mapped[int] = mapped_column(ForeignKey('employee.id'), nullable=True)
     support_contact: Mapped["Employee"] = relationship(back_populates='events')
     location: Mapped[str] = mapped_column(String(100))
-    attendees_number: Mapped[str] = mapped_column(Integer)
-    notes: Mapped[str] = mapped_column(String(2048))
+    attendees_number: Mapped[int] = mapped_column(Integer)
+    notes: Mapped[str] = mapped_column(String(2048), nullable=True)
 
     def __repr__(self):
         return f"Event {self.id}, " \
@@ -33,7 +33,8 @@ class Event(Base):
                f"start date {self.start_date}, " \
                f"end date {self.end_date}, " \
                f"location {self.location}, " \
-               f"attendees {self.attendees_number}"
+               f"attendees {self.attendees_number}, " \
+               f"support contact  {self.support_contact.email if self.support_contact_id else 'None'}"
 
 
 class Contract(Base):
@@ -57,7 +58,8 @@ class Contract(Base):
 
     def __repr__(self):
         return f"Contract {self.id}, client {self.client.company_name}, total_amount {self.total_amount}, " \
-               f"due_amount {self.due_amount}"
+               f"due_amount {self.due_amount}, " \
+               f"status: {self.status} "
 
 
 class Client(Base):
@@ -88,13 +90,10 @@ class Client(Base):
     )
 
     def __repr__(self):
-        return "<Client(id = '%s', first_name='%s', last_name='%s', company_name='%s')>" % (
-            self.id,
-            self.first_name,
-            self.last_name,
-            self.company_name,
-        )
-
+        return f"<Client(id : {self.id}, " \
+               f"first_name={self.first_name}, " \
+               f"last_name={self.last_name}, " \
+               f"commercial ={self.commercial.email})>"
 
 class Employee(Base):
     __tablename__ = "employee"

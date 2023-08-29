@@ -76,20 +76,22 @@ class ContractDAO:
         return session.query(Contract).get(contract_id)
 
     @staticmethod
-    def filter_by_attr(
-            client_id: int = None,
-            total_amount: float = None,
-            due_amount: float = None,
-            status: str = None,
-            client: Client = None
+    def filter_by_client_commercial_id(
+            employee_id: int = None,
+    ) -> list[Contract]:
+        return session.query(Contract).filter(Contract.client.has(Client.commercial_id == employee_id))
 
-    ) -> list[Client]:
-        return session.execute(select(Client).filter_by(
-            client_id=client_id,
-            total_amount=total_amount,
-            due_amount=due_amount,
-            status=status,
-        )).scalars().all()
+    @staticmethod
+    def filter_to_be_signed() -> list[Contract]:
+        return session.execute(select(Contract).filter_by(
+            status='to_be_signed',
+        )).all()
+
+    @staticmethod
+    def filter_due_amount_higher_than_zero() -> list[Contract]:
+        return session.execute(select(Contract).where(
+            Contract.due_amount != 0,
+        )).all()
 
     @staticmethod
     def add(contract: Contract) -> None:
@@ -127,27 +129,18 @@ class EventDAO:
         return session.query(Event).get(event_id)
 
     @staticmethod
-    def filter_by_attr(
-            contract_id: str = None,
-            client_id: str = None,
-            start_date: str = None,
-            end_date: str = None,
-            support_contact_id: int = None,
-            location: str = None,
-            attendees_number: str = None,
-            notes: str = None,
+    def filter_no_support() -> list[Event]:
+        return session.query(Event).filter_by(
+            support_contact_id=None,
+        )
 
-    ) -> list[Client]:
-        return session.execute(select(Client).filter_by(
-            contract_id=contract_id,
-            client_id=client_id,
-            start_date=start_date,
-            end_date=end_date,
+    @staticmethod
+    def filter_owned(
+            support_contact_id: int = None,
+    ) -> list[Event]:
+        return session.query(Event).filter_by(
             support_contact_id=support_contact_id,
-            location=location,
-            attendees_number=attendees_number,
-            notes=notes,
-        )).scalars().all()
+        )
 
     @staticmethod
     def add(event: Event) -> None:

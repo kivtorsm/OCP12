@@ -36,6 +36,7 @@ EXCLUDED_FIELDS = [
             "modified",
             "commercial_id",
             "support_contact_id",
+            "status",
         ]
 
 FIELDS = {
@@ -88,6 +89,11 @@ class CrudView:
             'update': f"mettre à jour un {NAMES[obj_type]}",
             'delete': f"supprimer un {NAMES[obj_type]}",
             'create': f"créer un {NAMES[obj_type]}",
+            'filter_no_support': f"consulter les {NAMES[obj_type]}s sans contact support",
+            'filter_no_signature': f"consulter les {NAMES[obj_type]}s non signés",
+            'filter_due_amount': f"consulter les {NAMES[obj_type]}s non soldés",
+            'filter_owned': f"consulter les {NAMES[obj_type]}s attribués"
+
         }
         choices = [
             action for action in crud_actions_allowed if action is not None
@@ -120,15 +126,17 @@ class CrudView:
         attr_list = []
         match obj_type:
             case 'client':
-                attr_list = Client.__table__.columns
+                attr_list = Client.__table__.columns.keys()
             case 'contract':
-                attr_list = Contract.__table__.columns
+                attr_list = Contract.__table__.columns.keys()
             case 'event':
-                attr_list = Event.__table__.columns
+                attr_list = Event.__table__.columns.keys()
+                # remove client_id only for event for client_id is related to the contract_id
+                # thus this is a specific case and cannot be added to the global list of fields to be excluded
+                attr_list.remove('client_id')
             case 'employee':
-                attr_list = Employee.__table__.columns
-        short_attr_list = [str(attr).replace(f"{obj_type}.", "") for attr in attr_list]
-        for attr in short_attr_list:
+                attr_list = Employee.__table__.columns.keys()
+        for attr in attr_list:
             if attr not in EXCLUDED_FIELDS:
                 obj_data[attr] = inquirer.text(message=f"{FIELDS[attr]}").execute()
         print("")
