@@ -1,7 +1,3 @@
-import datetime
-
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy import select
 
 from models import Client, Employee, Contract, Event, Department, Permission, DepartmentPermission

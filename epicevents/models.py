@@ -59,7 +59,8 @@ class Contract(Base):
     def __repr__(self):
         return f"Contract {self.id}, client {self.client.company_name}, total_amount {self.total_amount}, " \
                f"due_amount {self.due_amount}, " \
-               f"status: {self.status} "
+               f"status: {self.status}, " \
+               f"commercial: {self.client.commercial.email} "
 
 
 class Client(Base):

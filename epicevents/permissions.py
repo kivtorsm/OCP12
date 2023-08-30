@@ -144,6 +144,14 @@ def is_allowed(func):
                 func(*args, **kwargs)
             if func.__name__ == 'filter_due_amount':
                 func(*args, **kwargs)
+            if func.__name__ == 'prompt_for_input_data':
+                contract = ContractDAO.get_by_id(kwargs['contract_id'])
+                if contract.client.commercial_id == employee_id:
+                    return func(*args, **kwargs)
+                else:
+                    click.echo("Vous pouvez ajouter des évènements uniquement aux clients qui vous sont rattachés.")
+                    exit()
+
             elif func.__name__ == ('create' or 'delete'):
                 # Verify that the object type creation requested in the function is in the list of types allowed
                 if kwargs['obj_type'] in obj_type_allowed:

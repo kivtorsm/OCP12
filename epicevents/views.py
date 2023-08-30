@@ -3,9 +3,6 @@ import click
 
 from typing import Tuple, Union
 
-from rich.panel import Panel
-from rich import box
-
 from InquirerPy import prompt, inquirer
 from InquirerPy.base.control import Choice
 from InquirerPy.separator import Separator
@@ -134,6 +131,7 @@ class CrudView:
                 # thus this is a specific case and cannot be added to the global list of fields to be excluded
                 attr_list.remove('client_id')
                 attr_list.remove('support_contact_id')
+                attr_list.remove('contract_id')
             case 'employee':
                 attr_list = Employee.__table__.columns.keys()
         for attr in attr_list:
@@ -196,6 +194,14 @@ class CrudView:
 
         print(obj)
         print("")
+
+    @staticmethod
+    def prompt_for_contract_id():
+        obj_id = inquirer.text(
+            message=f"Saisir id du contrat pour lequel vous souhaitez ajouter un évènement:"
+        ).execute()
+        print("")
+        return obj_id
 
 
 class LoginView:

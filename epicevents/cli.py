@@ -21,8 +21,6 @@ from permissions import is_allowed, is_authenticated
 from mysql import connector
 
 
-
-
 @click.group()
 def cli():
     pass
@@ -163,8 +161,22 @@ class ObjectsCrud:
 
     @is_allowed
     def create(self, obj_type: str):
+
+        @is_allowed
+        def prompt_for_input_data(obj_type: str, contract_id: int = None) -> dict:
+            obj_data = self.view.prompt_for_object_creation(obj_type)
+            return obj_data
+
+        contract_id = None
+
+        if obj_type == 'event':
+            contract_id = self.view.prompt_for_contract_id()
+            obj_data = prompt_for_input_data(obj_type=obj_type, contract_id=contract_id)
+        else:
+            obj_data = prompt_for_input_data(obj_type=obj_type)
+
         obj = None
-        obj_data = self.view.prompt_for_object_creation(obj_type)
+
         match obj_type:
             case 'client':
                 commercial_id = get_token_user_id()
@@ -186,10 +198,10 @@ class ObjectsCrud:
                 )
                 ContractDAO.add(obj)
             case 'event':
-                contract = ContractDAO.get_by_id(obj_data['contract_id'])
+                contract = ContractDAO.get_by_id(contract_id)
                 obj = Event(
                     client_id=contract.client_id,
-                    contract_id=obj_data['contract_id'],
+                    contract_id=contract_id,
                     start_date=obj_data['start_date'],
                     end_date=obj_data['end_date'],
                     location=obj_data['location'],
@@ -243,9 +255,9 @@ class ObjectsCrud:
 
     @is_allowed
     def update(self, obj_type: str, obj: object, obj_fields_allowed: list = None):
-
         self.view.show_details(obj)
         field, new_value = self.view.prompt_for_object_field_update(obj, allowed_fields=obj_fields_allowed)
+
         command = ""
         match obj_type:
             case 'client':
@@ -256,7 +268,9 @@ class ObjectsCrud:
                 command = f"EventDAO.update(EventDAO, obj.id, {field}='{new_value}')"
             case 'employee':
                 command = f"EmployeeDAO.update(EmployeeDAO, obj.id, {field}='{new_value}')"
+
         exec(command)
+
         self.view.prompt_for_confirmation('update', obj_type, obj)
 
     def delete(self, obj_type: str):
