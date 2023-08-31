@@ -6,8 +6,10 @@ from typing import Tuple, Union
 from InquirerPy import prompt, inquirer
 from InquirerPy.base.control import Choice
 from InquirerPy.separator import Separator
+from InquirerPy.validator import EmptyInputValidator, NumberValidator, PasswordValidator
 
 from models import Client, Contract, Event, Employee
+from dao import ClientDAO
 from display import Display
 
 
@@ -57,6 +59,7 @@ FIELDS = {
     'encoded_hash': "Mot de passe",
 
 }
+
 
 class CrudView:
     @staticmethod
@@ -136,7 +139,58 @@ class CrudView:
                 attr_list = Employee.__table__.columns.keys()
         for attr in attr_list:
             if attr not in EXCLUDED_FIELDS:
-                obj_data[attr] = inquirer.text(message=f"{FIELDS[attr]}").execute()
+                if attr == 'notes':
+                    obj_data[attr] = inquirer.text(message=f"{FIELDS[attr]}").execute()
+                elif attr == 'department_id':
+                    obj_data[attr] = inquirer.select(
+                        message="Sélectionner un département:",
+                        choices=[
+                            Choice(value=1, name="1 - Gestion"),
+                            Choice(value=2, name="2 - Commercial"),
+                            Choice(value=3, name="3 - Support"),
+                        ],
+                        default=None,
+                    ).execute()
+                elif attr == 'client_id':
+                    obj_data[attr] = inquirer.number(
+                        message=f"{FIELDS[attr]}",
+                        min_allowed=1,
+                        max_allowed=len(ClientDAO.get_all()),
+                        validate=EmptyInputValidator("Le champ ne peut pas être vide"),
+                    ).execute()
+                elif attr == 'attendees_number':
+                    obj_data[attr] = inquirer.number(
+                        message=f"{FIELDS[attr]}",
+                        validate=EmptyInputValidator("Le champ ne peut pas être vide")).execute()
+                elif attr in ['total_amount', 'due_amount']:
+                    obj_data[attr] = inquirer.text(
+                        message=f"{FIELDS[attr]}",
+                        validate=NumberValidator(
+                            message="Le champ doit être un nombre décimal. Chiffres décimaux séparés par un point "
+                                    "et non une virgule",
+                            float_allowed=True
+                        )).execute()
+                elif attr == 'encoded_hash':
+                    obj_data[attr] = inquirer.secret(
+                        message=f"{FIELDS[attr]}",
+                        validate=PasswordValidator(
+                            message="Le champ doit avoir au minimum : "
+                                    "8 caractères, "
+                                    "une majuscule, "
+                                    "un chiffre et "
+                                    "un caractère spécial",
+                            length=8,
+                            cap=True,
+                            special=True,
+                            number=True
+                        ),
+                        transformer=lambda _: "*hidden*",
+                    ).execute()
+                else:
+                    obj_data[attr] = inquirer.text(
+                        message=f"{FIELDS[attr]}",
+                        validate=EmptyInputValidator("Le champ ne peut pas être vide")
+                    ).execute()
         print("")
         return obj_data
 
@@ -176,8 +230,24 @@ class CrudView:
             default=None,
         ).execute()
         print("")
-
-        new_value = inquirer.text(message=f"Saisir nouvelle valeur pour {field_to_modify}:").execute()
+        if field_to_modify == 'notes':
+            new_value = inquirer.text(message=f"Saisir nouvelle valeur pour {field_to_modify}:").execute()
+        elif field_to_modify in ['attendees_number', 'client_id', 'department_id']:
+            new_value = inquirer.text(
+                message=f"Saisir nouvelle valeur pour {field_to_modify}:",
+                validate=NumberValidator("Le champ doit être un entier")).execute()
+        elif field_to_modify in ['total_amount', 'due_amount']:
+            new_value = inquirer.text(
+                message=f"Saisir nouvelle valeur pour {field_to_modify}:",
+                validate=NumberValidator(
+                    message="Le champ doit être un nombre décimal",
+                    float_allowed=True
+                )).execute()
+        else:
+            new_value = inquirer.text(
+                message=f"Saisir nouvelle valeur pour {field_to_modify}:",
+                validate=EmptyInputValidator("Le champ ne peut pas être vide")
+            ).execute()
         print("")
         return field_to_modify, new_value
 

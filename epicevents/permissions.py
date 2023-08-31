@@ -146,13 +146,16 @@ def is_allowed(func):
             if func.__name__ == 'filter_due_amount':
                 func(*args, **kwargs)
             if func.__name__ == 'get_input_data':
-                contract = ContractDAO.get_by_id(kwargs['contract_id'])
-                if contract.client.commercial_id == employee_id and contract.status == 'signed':
-                    return func(*args, **kwargs)
+                if 'contract_id' in kwargs.keys():
+                    contract = ContractDAO.get_by_id(kwargs['contract_id'])
+                    if contract.client.commercial_id == employee_id and contract.status == 'signed':
+                        return func(*args, **kwargs)
+                    else:
+                        click.echo("Vous pouvez ajouter des évènements uniquement à des contrats signés avec des clients "
+                                   "qui vous sont rattachés.")
+                        exit()
                 else:
-                    click.echo("Vous pouvez ajouter des évènements uniquement à des contrats signés avec des clients "
-                               "qui vous sont rattachés.")
-                    exit()
+                    return func(*args, **kwargs)
 
             elif func.__name__ in ['create', 'delete']:
                 # Verify that the object type creation requested in the function is in the list of types allowed
