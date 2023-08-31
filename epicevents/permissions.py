@@ -145,12 +145,13 @@ def is_allowed(func):
                 func(*args, **kwargs)
             if func.__name__ == 'filter_due_amount':
                 func(*args, **kwargs)
-            if func.__name__ == 'prompt_for_input_data':
+            if func.__name__ == 'get_input_data':
                 contract = ContractDAO.get_by_id(kwargs['contract_id'])
-                if contract.client.commercial_id == employee_id:
+                if contract.client.commercial_id == employee_id and contract.status == 'signed':
                     return func(*args, **kwargs)
                 else:
-                    click.echo("Vous pouvez ajouter des évènements uniquement aux clients qui vous sont rattachés.")
+                    click.echo("Vous pouvez ajouter des évènements uniquement à des contrats signés avec des clients "
+                               "qui vous sont rattachés.")
                     exit()
 
             elif func.__name__ in ['create', 'delete']:

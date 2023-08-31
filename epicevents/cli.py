@@ -163,7 +163,7 @@ class ObjectsCrud:
     def create(self, obj_type: str):
 
         @is_allowed
-        def prompt_for_input_data(obj_type: str, contract_id: int = None) -> dict:
+        def get_input_data(obj_type: str, contract_id: int = None) -> dict:
             obj_data = self.view.prompt_for_object_creation(obj_type)
             return obj_data
 
@@ -171,9 +171,9 @@ class ObjectsCrud:
 
         if obj_type == 'event':
             contract_id = self.view.prompt_for_contract_id()
-            obj_data = prompt_for_input_data(obj_type=obj_type, contract_id=contract_id)
+            obj_data = get_input_data(obj_type=obj_type, contract_id=contract_id)
         else:
-            obj_data = prompt_for_input_data(obj_type=obj_type)
+            obj_data = get_input_data(obj_type=obj_type)
 
         obj = None
 
