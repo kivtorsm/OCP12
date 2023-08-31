@@ -13,7 +13,7 @@ from urllib.parse import urlparse
 from models import start_db, Client, Contract, Event, Employee, Permission, DepartmentPermission, Department
 from dao import ClientDAO, ContractDAO, EventDAO, EmployeeDAO, DepartmentPermissionDAO, PermissionDAO, DepartmentDAO
 from views import CrudView, LoginView
-from conf import SECRET, HOST
+from conf import SECRET, HOST, CREATE_TEST_DATA_PATH
 from permissions import read_credentials, get_token_user_id
 
 from permissions import is_allowed, is_authenticated
@@ -222,6 +222,7 @@ class ObjectsCrud:
                 EmployeeDAO.add(obj)
         self.view.prompt_for_confirmation('create', obj_type, obj)
 
+    @is_allowed
     def show_all(self, obj_type: str):
         obj_list = []
         match obj_type:
@@ -249,6 +250,7 @@ class ObjectsCrud:
                 obj = EmployeeDAO.get_by_id(obj_id)
         return obj
 
+    @is_allowed
     def show_by_id(self, obj_type: str):
         obj = self.get_object_by_id(obj_type, 'show')
         self.view.show_details(obj)
@@ -326,9 +328,7 @@ if __name__ == "__main__":
     start_db()
 
     if not EventDAO.get_all():
-        click.echo('start_db')
-        absolute_path = os.path.dirname(__file__)
-        relative_path = './initialize_db.sql'
-        full_path = os.path.join(absolute_path, relative_path)
-        execute_sql_script(full_path)
+        click.echo('create_test_data')
+
+        execute_sql_script(CREATE_TEST_DATA_PATH)
     cli()

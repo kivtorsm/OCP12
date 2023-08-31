@@ -100,7 +100,8 @@ def is_allowed(func):
 
     def wrapper(*args, **kwargs):
 
-        if func.__name__ == ('show_all' or 'show_details'):
+        if func.__name__ in ['show_all', 'show_details']:
+            click.echo("ça passe")
             func(*args, **kwargs)
         else:
             # Check which object types the user is allowed to create
@@ -152,7 +153,7 @@ def is_allowed(func):
                     click.echo("Vous pouvez ajouter des évènements uniquement aux clients qui vous sont rattachés.")
                     exit()
 
-            elif func.__name__ == ('create' or 'delete'):
+            elif func.__name__ in ['create', 'delete']:
                 # Verify that the object type creation requested in the function is in the list of types allowed
                 if kwargs['obj_type'] in obj_type_allowed:
                     func(*args, **kwargs)
