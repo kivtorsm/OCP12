@@ -10,5 +10,4 @@ setup(
     entry_points='''
         [console_scripts]
         epicevents=epicevents.cli:cli
-    ''',
-)
+    ''',)
