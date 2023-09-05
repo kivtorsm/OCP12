@@ -4,6 +4,8 @@ from models import Client, Employee, Contract, Event, Department, Permission, De
 
 from conf import session
 
+import sentry_sdk
+
 
 class ClientDAO:
     @staticmethod
@@ -102,12 +104,21 @@ class ContractDAO:
             due_amount: float = None,
             status: str = None,
     ):
-        db_contract = self.get_by_id(contract_id)
-        db_contract.client_id = client_id if client_id else db_contract.client_id
-        db_contract.total_amount = total_amount if total_amount else db_contract.total_amount
-        db_contract.due_amount = due_amount if due_amount else db_contract.due_amount
-        db_contract.status = status if status else db_contract.status
-        session.commit()
+        if status:
+            with sentry_sdk.start_transaction(op="task", name="Sign Contract"):
+                db_contract = self.get_by_id(contract_id)
+                db_contract.client_id = client_id if client_id else db_contract.client_id
+                db_contract.total_amount = total_amount if total_amount else db_contract.total_amount
+                db_contract.due_amount = due_amount if due_amount else db_contract.due_amount
+                db_contract.status = status if status else db_contract.status
+                session.commit()
+        else:
+            db_contract = self.get_by_id(contract_id)
+            db_contract.client_id = client_id if client_id else db_contract.client_id
+            db_contract.total_amount = total_amount if total_amount else db_contract.total_amount
+            db_contract.due_amount = due_amount if due_amount else db_contract.due_amount
+            db_contract.status = status if status else db_contract.status
+            session.commit()
 
     def delete(self, contract_id):
         contract_db = self.get_by_id(contract_id)
@@ -187,9 +198,11 @@ class EmployeeDAO:
 
     @staticmethod
     def add(employee: Employee) -> None:
-        session.add(employee)
-        session.commit()
+        with sentry_sdk.start_transaction(op="task", name="Add Employee"):
+            session.add(employee)
+            session.commit()
 
+    @sentry_sdk.trace
     def update(
             self,
             employee_id,
@@ -200,14 +213,15 @@ class EmployeeDAO:
             encoded_hash: str = None,
 
     ):
-        db_employee = self.get_by_id(employee_id)
-        db_employee.first_name = first_name if first_name else db_employee.first_name
-        db_employee.last_name = last_name if last_name else db_employee.last_name
-        db_employee.email = email if email else db_employee.email
-        db_employee.department_id = department_id if department_id else db_employee.department_id
-        db_employee.encoded_hash = encoded_hash if encoded_hash else db_employee.encoded_hash
+        with sentry_sdk.start_transaction(op="task", name="Update Employee"):
+            db_employee = self.get_by_id(employee_id)
+            db_employee.first_name = first_name if first_name else db_employee.first_name
+            db_employee.last_name = last_name if last_name else db_employee.last_name
+            db_employee.email = email if email else db_employee.email
+            db_employee.department_id = department_id if department_id else db_employee.department_id
+            db_employee.encoded_hash = encoded_hash if encoded_hash else db_employee.encoded_hash
 
-        session.commit()
+            session.commit()
 
     def delete(self, employee_id: int):
         employee_db = self.get_by_id(employee_id)

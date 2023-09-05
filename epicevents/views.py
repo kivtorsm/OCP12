@@ -34,7 +34,6 @@ EXCLUDED_FIELDS = [
             "id",
             "modified",
             "commercial_id",
-            "status",
         ]
 
 FIELDS = {
@@ -46,7 +45,7 @@ FIELDS = {
     'commercial_id': "ID du commercial",
     'client_id': "ID du client",
     'total_amount': "Montant total",
-    'due_amount': "Montant restantà payer",
+    'due_amount': "Montant restant à payer",
     'status': "Etat",
     'contract_id': "ID du contrat",
     'start_date': "Date de début",
@@ -224,6 +223,7 @@ class CrudView:
             in obj.__dict__.items()
             if (attr in allowed_fields and attr not in EXCLUDED_FIELDS)
         ]
+
         field_to_modify = inquirer.select(
             message="Sélectionner un champ à modifier:",
             choices=field_choices,

@@ -185,6 +185,8 @@ def is_allowed(func):
                                     object_list_allowed = ContractDAO.get_all()
                                 case 'event':
                                     object_list_allowed = EventDAO.get_all()
+                                case 'employee':
+                                    object_list_allowed = EmployeeDAO.get_all()
                     # other cases
                     match objects_allowed[0]:
                         case 'owned':
