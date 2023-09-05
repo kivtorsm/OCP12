@@ -10,7 +10,6 @@ from InquirerPy.validator import EmptyInputValidator, NumberValidator, PasswordV
 
 from models import Client, Contract, Event, Employee
 from dao import ClientDAO
-from display import Display
 
 
 NAMES = {
@@ -61,8 +60,15 @@ FIELDS = {
 
 
 class CrudView:
+    """
+    View containing all object CRUD views.
+    """
+
     @staticmethod
     def prompt_for_main_menu(allowed_objects: list = None):
+        """
+        Main menu prompt asking to select an object menu.
+        """
         choices = [
             obj for obj in allowed_objects if obj is not None
         ]
@@ -81,6 +87,11 @@ class CrudView:
 
     @staticmethod
     def prompt_for_crud_menu(obj_type: str, crud_actions_allowed: list = None):
+        """
+        Menu prompt asking to select a CRUD action.
+        """
+
+        # Dictionnary with translated menu texts
         ACTIONS_LONG = {
             'show': f"consulter tous les {NAMES[obj_type]}s",
             'show_details': f"consulter les détails d'un {NAMES[obj_type]}",
@@ -119,6 +130,9 @@ class CrudView:
 
     @staticmethod
     def prompt_for_object_creation(obj_type: str):
+        """
+        Prompt allowing to create an object
+        """
         print(f"Saisissez les données du {NAMES[obj_type]}:")
         obj_data = {}
         attr_list = []
@@ -195,23 +209,34 @@ class CrudView:
 
     @staticmethod
     def show_obj_list(obj_list: list):
+        """
+        Shows all objects from a list
+        """
         [print(obj) for obj in obj_list]
         print("")
 
     @staticmethod
     def show_details(obj: object):
+        """
+        Shows object details
+        """
         print(obj)
         print("")
 
     @staticmethod
     def prompt_for_object_id(action: str, obj_type: str):
-
+        """
+        Prompt asking for object ID input.
+        """
         obj_id = inquirer.text(message=f"Saisir id du {NAMES[obj_type]} à {ACTIONS[action]}:").execute()
         print("")
         return obj_id
 
     @staticmethod
     def prompt_for_object_field_update(obj: object, allowed_fields: list = None) -> (str, str):
+        """
+        Prompt allowing to select a field to update and returning the modified field and the new value
+        """
         allowed_fields = allowed_fields if allowed_fields else [
             attr
             for attr, value
@@ -253,6 +278,9 @@ class CrudView:
 
     @staticmethod
     def prompt_for_confirmation(change: str, obj_type: str, obj: object):
+        """
+        Message confirming action
+        """
         match change:
             case 'create':
                 print(f"Le {NAMES[obj_type]} a été correctement créé")
@@ -267,6 +295,9 @@ class CrudView:
 
     @staticmethod
     def prompt_for_contract_id():
+        """
+        Prompt asking for contract ID to which user will add an event.
+        """
         obj_id = inquirer.text(
             message=f"Saisir id du contrat pour lequel vous souhaitez ajouter un évènement:"
         ).execute()
@@ -275,22 +306,24 @@ class CrudView:
 
 
 class LoginView:
-    def __init__(self):
-        self.display = Display()
+    """
+    Login functions view.
+    """
 
     def prompt_login_details(self) -> Tuple[str, str]:
-
-        self.display.log(
+        """
+        Prompt asking for login details (user/password)
+        """
+        click.echo(
             "Saisissez votre email et votre mot de passe et tapez entrée, ou appuyez sur ctrl+c pour sortir : "
         )
         email = getpass.getpass(prompt="Email :")
         password = getpass.getpass(prompt="Mot de passe :")
         return email, password
 
-    def succesful_login(self):
+    @staticmethod
+    def successful_login():
+        """
+        Message confirming successful login
+        """
         click.echo("Vous êtes bien connectés")
-
-    def already_logged_in(self):
-        click.echo(
-            "Vous êtes déjà connectés ! \nEssayez --relogin pour mettre à jour vos informations de connexion!"
-        )

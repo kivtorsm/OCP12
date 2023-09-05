@@ -11,6 +11,9 @@ from conf import SECRET, HOST
 
 
 def find_netrc_token(machine: str, raise_errors=False):
+    """
+    Check if there's a token in the netrc file in the user's machine
+    """
     NETRC_FILES = (".netrc", "_netrc")
     netrc_file = os.environ.get("NETRC")
     if netrc_file is not None:
@@ -54,6 +57,9 @@ def find_netrc_token(machine: str, raise_errors=False):
 
 
 def read_credentials(machine: str) -> Union[Tuple[str, str], None]:
+    """
+    Reads user credentials if there's an existing token
+    """
     user, token = None, None
     auth = find_netrc_token(machine, True)
     if auth and auth[0] and auth[1]:
@@ -63,15 +69,24 @@ def read_credentials(machine: str) -> Union[Tuple[str, str], None]:
 
 
 def get_token_payload(token):
+    """
+    Gets token data and returns it
+    """
     return jwt.decode(token, key=SECRET, algorithms="HS256")
 
 
 def get_token():
+    """
+    Gets credentials from token and returns them
+    """
     credentials = read_credentials(HOST)
     return credentials[1]
 
 
 def get_token_user_id():
+    """
+    Gets user id saved in token
+    """
     token = get_token()
     payload = get_token_payload(token)
     user = EmployeeDAO.get_by_email(payload['email'])
@@ -79,6 +94,9 @@ def get_token_user_id():
 
 
 def is_authenticated(func):
+    """
+    Checks if the user is authenticated before allowing to access a function. Used as a decorator.
+    """
     def wrapper():
         credentials = read_credentials(HOST)
         existing_token = credentials is not None
@@ -96,7 +114,14 @@ def is_authenticated(func):
     return wrapper
 
 def is_allowed(func):
-    allowed = "client_create"
+    """
+    Checks user permissions. Used as a decorator. Depending on the decorated function it may provide with list of authorised objects, type of objects, crud actions or object fields.
+
+    It allows :
+    - Providing inputs on objects that can be shown, created or modified
+    - Filter menu actions that are allowed
+    - Filter crud actions to be executed on an object
+    """
 
     def wrapper(*args, **kwargs):
 

@@ -5,15 +5,13 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
-from mysql import connector
-
 # SQLAlchemy session construction
 # DB_CONNEXION_STRING
 absolute_path = os.path.dirname(__file__)
 relative_path = '../.ssh/db_connexion.txt'
-full_path = os.path.join(absolute_path, relative_path)
+secret_full_path = os.path.join(absolute_path, relative_path)
 
-with open(full_path) as f:
+with open(secret_full_path) as f:
     DB_ENGINE_ACCESS = f.readlines()[0]
 
 ENGINE = create_engine(DB_ENGINE_ACCESS)
@@ -31,24 +29,24 @@ CREATE_TEST_DATA_PATH = os.path.join(absolute_path, relative_path)
 # Secret location
 absolute_path = os.path.dirname(__file__)
 relative_path = '../.ssh/secret.txt'
-full_path = os.path.join(absolute_path, relative_path)
+secret_full_path = os.path.join(absolute_path, relative_path)
 
-with open(full_path) as f:
+with open(secret_full_path) as f:
     SECRET = str(f.readlines())
 
 # netrc location
 HOST = "http://localhost:8000"
 
 # Sentry
-# functions_to_trace = [
-#     {"qualified_name": "dao.EmployeeDAO.add"},
-#     {"qualified_name": "dao.EmployeeDAO.update"},
-#     {"qualified_name": "dao.ContractDAO.update"},
-# ]
+absolute_path = os.path.dirname(__file__)
+relative_path = '../.ssh/secret.txt'
+sentry_dns_full_path = os.path.join(absolute_path, relative_path)
+
+with open(sentry_dns_full_path) as f:
+    SENTRY_DNS = str(f.readlines())
 
 sentry_sdk.init(
-    dsn="https://80080c29e56253234651359eb9f778db@o4505799371128832.ingest.sentry.io/4505821850828800",
-    # functions_to_trace=functions_to_trace,
+    dsn=SENTRY_DNS,
     # max_breadcrumbs=100,
     # debug=True,
 
@@ -61,6 +59,4 @@ sentry_sdk.init(
     # of sampled transactions.
     # We recommend adjusting this value in production.
     profiles_sample_rate=1.0,
-
-    # profiles_sampler=profiles_sampler,
 )

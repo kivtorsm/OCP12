@@ -28,15 +28,24 @@ def cli():
 
 @cli.command("login")
 def login():
+    """
+    Instantiates login controller and launches authentication method
+    """
     login = Login()
     login.authenticate()
 
 
 class Login:
+    """
+    Login controller
+    """
     def __init__(self):
         self.view = LoginView()
 
     def authenticate(self):
+        """
+        Authentication function
+        """
         (email, password) = self.view.prompt_login_details()
         try:
             employee = self.get_employee(email)
@@ -56,18 +65,24 @@ class Login:
 
             self.write_netrc(HOST, email, token)
             read_credentials(HOST)
-            self.view.succesful_login()
+            self.view.successful_login()
 
         except exceptions.VerifyMismatchError as err:
             click.echo(f"{err} : incorrect login or password")
 
     @staticmethod
     def get_employee(email):
+        """
+        Returns an employee with a given email
+        """
         employee = EmployeeDAO.get_by_email(email)
         return employee
 
     @staticmethod
     def write_netrc(host: str, user: str, token: str):
+        """
+        Writes netrc file with authenticated user token info.
+        """
         normalized_host = urlparse(host).netloc.split(":")[0]
         if normalized_host != "localhost" and "." not in normalized_host:
             return None
@@ -100,11 +115,17 @@ class Login:
 
 
 class ObjectsCrud:
+    """
+    General CRUD controller for all objects
+    """
     def __init__(self):
         self.view = CrudView()
 
     @is_allowed
     def main_menu(self, objects_allowed: list = None):
+        """
+        Main menu controller. Allows user to enter CRUD options for a given object.
+        """
         while True:
             choice = self.view.prompt_for_main_menu(objects_allowed)
             if choice == 'exit':
@@ -114,6 +135,9 @@ class ObjectsCrud:
 
     @is_allowed
     def crud_menu(self, obj_type: str, crud_actions_allowed: list = None):
+        """
+        Object controller with CRUD options allowed for the given user
+        """
         while True:
             choice = self.view.prompt_for_crud_menu(obj_type, crud_actions_allowed=crud_actions_allowed)
             match choice:
@@ -141,29 +165,47 @@ class ObjectsCrud:
 
     @is_allowed
     def filter_no_support(self, obj_type=None):
+        """
+        Filters all events with no support contact associated to the event.
+        """
         obj_list = EventDAO.filter_no_support()
         self.view.show_obj_list(obj_list)
 
     @is_allowed
     def filter_no_signature(self, obj_type=None):
+        """
+        Filters unsigned contracts
+        """
         obj_list = ContractDAO.filter_to_be_signed()
         self.view.show_obj_list(obj_list)
 
     @is_allowed
     def filter_due_amount(self, obj_type=None):
+        """
+        Filters contracts which have not been completely paid
+        """
         obj_list = ContractDAO.filter_due_amount_higher_than_zero()
         self.view.show_obj_list(obj_list)
 
     @is_allowed
     def filter_owned(self, support_contact_id=None, obj_type=None):
+        """
+        Filters owned events by user. IE events for which the user is associated as a support contact.
+        """
         obj_list = EventDAO.filter_owned(support_contact_id=support_contact_id)
         self.view.show_obj_list(obj_list)
 
     @is_allowed
     def create(self, obj_type: str):
+        """
+        Object creation controller
+        """
 
         @is_allowed
         def get_input_data(obj_type: str, contract_id: int = None) -> dict:
+            """
+            Gets object data
+            """
             obj_data = self.view.prompt_for_object_creation(obj_type)
             return obj_data
 
@@ -224,6 +266,9 @@ class ObjectsCrud:
 
     @is_allowed
     def show_all(self, obj_type: str):
+        """
+        Shows all objects of a given type.
+        """
         obj_list = []
         match obj_type:
             case 'client':
@@ -237,6 +282,9 @@ class ObjectsCrud:
         self.view.show_obj_list(obj_list)
 
     def get_object_by_id(self, obj_type: str, change: str):
+        """
+        Returns an object depending on the id.
+        """
         obj = None
         obj_id = self.view.prompt_for_object_id(change, obj_type)
         match obj_type:
@@ -252,11 +300,17 @@ class ObjectsCrud:
 
     @is_allowed
     def show_by_id(self, obj_type: str):
+        """
+        Shows object details with a given id
+        """
         obj = self.get_object_by_id(obj_type, 'show')
         self.view.show_details(obj)
 
     @is_allowed
     def update(self, obj_type: str, obj: object, obj_fields_allowed: list = None):
+        """
+        Object update controller.
+        """
         self.view.show_details(obj)
         field, new_value = self.view.prompt_for_object_field_update(obj, allowed_fields=obj_fields_allowed)
 
@@ -276,6 +330,9 @@ class ObjectsCrud:
         self.view.prompt_for_confirmation('update', obj_type, obj)
 
     def delete(self, obj_type: str):
+        """
+        Object delete controller
+        """
         obj = self.get_object_by_id(obj_type, 'delete')
         self.view.show_details(obj)
         match obj_type:
@@ -293,11 +350,17 @@ class ObjectsCrud:
 @cli.command("start")
 @is_authenticated
 def start():
+    """
+    Launches app with the CRUD controller
+    """
     obj_crud = ObjectsCrud()
     obj_crud.main_menu()
 
 
 def execute_sql_script(filename):
+    """
+    Executes a sql script
+    """
     # Open and read the file as a single buffer
     f = open(filename, 'r')
     sql_file = f.read()
@@ -325,10 +388,14 @@ def execute_sql_script(filename):
 
 
 if __name__ == "__main__":
+    # start database on program start up
     start_db()
 
+    # if the database is empty then initialise with test data
     if not EventDAO.get_all():
         click.echo('create_test_data')
 
         execute_sql_script(CREATE_TEST_DATA_PATH)
+
+    # launch cli
     cli()
