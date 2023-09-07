@@ -88,10 +88,15 @@ In the .ssh folder :
 ```shell
 touch secret.txt
 ```
-- Inside the file, write a secret to be used by the encrypting library
+- Inside the file, write a secret (any string typed in the txt file) to be used by the encrypting library
 
-### 7.  Create sentry dsn file
-In the .ssh folder :
+### 7. Connect Sentry services
+#### Pre-requisites
+- Having or creating a sentry account
+- Creating an epic_events project 
+
+#### Create sentry dsn file
+- In the .ssh folder :
 ```shell
 touch sentry_dns.txt
 ```
