@@ -32,18 +32,18 @@ relative_path = '../.ssh/secret.txt'
 secret_full_path = os.path.join(absolute_path, relative_path)
 
 with open(secret_full_path) as f:
-    SECRET = str(f.readlines())
+    SECRET = f.readlines()[0]
 
 # netrc location
 HOST = "http://localhost:8000"
 
 # Sentry
 absolute_path = os.path.dirname(__file__)
-relative_path = '../.ssh/secret.txt'
+relative_path = '../.ssh/sentry_dns.txt'
 sentry_dns_full_path = os.path.join(absolute_path, relative_path)
 
 with open(sentry_dns_full_path) as f:
-    SENTRY_DNS = str(f.readlines())
+    SENTRY_DNS = f.readlines()[0]
 
 sentry_sdk.init(
     dsn=SENTRY_DNS,
